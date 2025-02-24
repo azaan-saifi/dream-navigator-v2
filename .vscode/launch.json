@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Next.js (Launch)",
+      "type": "node",
+      "request": "launch",
+      // We'll use Node as the runtime
+      "runtimeExecutable": "node",
+      // Tell Node to run next from node_modules, in dev mode
+      "runtimeArgs": [
+        "--inspect",
+        "${workspaceFolder}/node_modules/next/dist/bin/next",
+        "dev"
+      ],
+      // Make sure we're in the root of your project
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"],
+      // Not strictly required, but helps if you want to see more logs
+      "console": "integratedTerminal"
+    }
+  ]
+}
