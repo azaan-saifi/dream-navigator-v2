@@ -169,6 +169,7 @@ export async function getStreamingObjectResponse({
   partialObjectStream,
   toolId,
   toolName,
+  transformTool, // Add this parameter to handle custom transformations
 }: {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   partialObjectStream: AsyncIterableStream<
@@ -185,20 +186,29 @@ export async function getStreamingObjectResponse({
   >;
   toolId: string;
   toolName: string;
+  transformTool?: (tool: any) => any; // Optional function to transform the tool data
 }) {
-  // Add initial empty tool message
+  // Add initial empty tool message with initialized state fields
   setMessages((prev) => [
     ...prev,
     {
       role: "assistant",
       content: "",
-      tool: {
-        id: toolId,
-        name: toolName,
-        quizTopic: "",
-        initialResponse: "",
-        quizData: [],
-      },
+      tool: transformTool
+        ? transformTool({
+            id: toolId,
+            name: toolName,
+            quizTopic: "",
+            initialResponse: "",
+            quizData: [],
+          })
+        : {
+            id: toolId,
+            name: toolName,
+            quizTopic: "",
+            initialResponse: "",
+            quizData: [],
+          },
     },
   ]);
 
@@ -212,21 +222,26 @@ export async function getStreamingObjectResponse({
         // Merge partial updates with existing tool data
         return newMessages.map((msg) => {
           if (msg === lastMessage) {
+            const updatedTool = {
+              id: toolId,
+              name: toolName,
+              ...msg.tool,
+              // Merge string fields
+              quizTopic: partialObject.quizTopic || msg?.tool?.quizTopic || "",
+              initialResponse:
+                partialObject.initialResponse ||
+                msg?.tool?.initialResponse ||
+                "",
+              // Merge array data incrementally
+              quizData: mergeQuizData(
+                msg.tool?.quizData || [],
+                partialObject.quizData || []
+              ),
+            };
+
             return {
               ...msg,
-              tool: {
-                ...msg.tool,
-                // Merge string fields
-                quizTopic: partialObject.quizTopic || msg?.tool?.quizTopic,
-                initialResponse:
-                  partialObject.initialResponse || msg?.tool?.initialResponse,
-
-                // Merge array data incrementally
-                quizData: mergeQuizData(
-                  msg.tool?.quizData || [],
-                  partialObject.quizData || []
-                ),
-              },
+              tool: transformTool ? transformTool(updatedTool) : updatedTool,
             };
           }
           return msg;

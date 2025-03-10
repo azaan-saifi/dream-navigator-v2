@@ -10,24 +10,17 @@ interface Animate {
   [key: string]: any;
 }
 
-interface QuizState {
-  currentQuestion: number;
-  selectedAnswers: (number | null)[];
-  showResults: boolean;
-  answeredCorrectly: boolean;
-  showExplanation: boolean;
-  showReinforcement: boolean;
-  reinforcementAnswer: number | null;
-  reinforcementAttempts: number;
-  maxAttemptsReached: boolean;
-  reinforcementQuestion: any;
-  attemptedReinforcementQuestions: boolean[];
-  explanationStates: boolean[];
-  correctnessStates: boolean[];
+interface QuizProps {
+  quizId: string;
+  quizTopic: string;
+  quizData: QuizQuestion[];
+  onClose: () => void;
+  initial: Animate;
+  animate: Animate;
+  screenSize: string;
+  quizTool: QuizTool;
+  onUpdateQuizState: (quizId: string, updates: Partial<QuizTool>) => void;
 }
-
-// Create a global quiz responses store to maintain state across quizzes
-const globalQuizResponses: { [quizId: string]: QuizState } = {};
 
 const Quiz = ({
   quizId,
@@ -37,37 +30,13 @@ const Quiz = ({
   initial,
   animate,
   screenSize,
-}: {
-  quizId: string;
-  quizTopic: string;
-  quizData: QuizQuestion[];
-  onClose: () => void;
-  initial: Animate;
-  animate: Animate;
-  screenSize: string;
-}) => {
-  // Initialize state from global store or create new
-  const [quizState, setQuizState] = useState<QuizState>(() => {
-    return (
-      globalQuizResponses[quizId] || {
-        currentQuestion: 0,
-        selectedAnswers: Array(quizData.length).fill(null),
-        showResults: false,
-        answeredCorrectly: true,
-        showExplanation: false,
-        showReinforcement: false,
-        reinforcementAnswer: null,
-        reinforcementAttempts: 0,
-        maxAttemptsReached: false,
-        reinforcementQuestion: null,
-        attemptedReinforcementQuestions: Array(quizData.length).fill(false),
-        explanationStates: Array(quizData.length).fill(false),
-        correctnessStates: Array(quizData.length).fill(true),
-      }
-    );
-  });
+  quizTool,
+  onUpdateQuizState,
+}: QuizProps) => {
+  const [loadingReinforcement, setLoadingReinforcement] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  // Destructure state from quizState
+  // Destructure state from quizTool
   const {
     currentQuestion,
     selectedAnswers,
@@ -82,22 +51,11 @@ const Quiz = ({
     attemptedReinforcementQuestions,
     explanationStates,
     correctnessStates,
-  } = quizState;
-
-  const [loadingReinforcement, setLoadingReinforcement] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // Update the global store whenever quizState changes
-  useEffect(() => {
-    globalQuizResponses[quizId] = quizState;
-  }, [quizState, quizId]);
+  } = quizTool;
 
   // Unified state updater
-  const updateQuizState = (newState: Partial<QuizState>) => {
-    setQuizState((prev) => ({
-      ...prev,
-      ...newState,
-    }));
+  const updateQuizState = (newState: Partial<QuizTool>) => {
+    onUpdateQuizState(quizId, newState);
   };
 
   const handleOptionSelect = (optionIndex: number) => {
@@ -181,7 +139,7 @@ const Quiz = ({
   };
 
   const handleContinue = () => {
-    const newState: Partial<QuizState> = {
+    const newState: Partial<QuizTool> = {
       showExplanation: false,
       showReinforcement: false,
     };

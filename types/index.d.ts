@@ -44,20 +44,33 @@ interface Message {
   content: string;
   tool?: QuizTool;
 }
-
 interface QuizQuestion {
   question: string;
   options: string[];
   correctAnswer: number;
   explanation: string;
 }
-
 interface QuizTool {
   id: string;
   name: string;
   quizTopic: string;
   initialResponse: string;
   quizData: QuizQuestion[];
+
+  // Migrated from QuizState
+  currentQuestion: number;
+  selectedAnswers: (number | null)[];
+  showResults: boolean;
+  answeredCorrectly: boolean;
+  showExplanation: boolean;
+  showReinforcement: boolean;
+  reinforcementAnswer: number | null;
+  reinforcementAttempts: number;
+  maxAttemptsReached: boolean;
+  reinforcementQuestion: any; // Match the existing type
+  attemptedReinforcementQuestions: boolean[];
+  explanationStates: boolean[];
+  correctnessStates: boolean[];
 }
 
 interface ChatProps {

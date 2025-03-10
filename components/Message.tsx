@@ -66,7 +66,7 @@ export const AssistantMessage = ({
                 className="flex bg-dark-hard w-auto rounded-lg border-zinc-700 border hover:border-zinc-500 hover:bg-dark-100 cursor-pointer"
               >
                 <div className="w-14 p-3 border-r-zinc-700 border-r ">
-                  {tool.quizData[1] ? (
+                  {tool.quizData[2] ? (
                     <GiBrain className="text-white text-3xl h-full" />
                   ) : (
                     <Loader2 className="animate-spin text-dark-300 text-3xl h-full" />

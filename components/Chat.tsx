@@ -26,8 +26,6 @@ import { v4 } from "uuid";
 const MemoizedUserMessage = React.memo(UserMessage);
 const MemoizedAssistantMessage = React.memo(AssistantMessage);
 
-const quizResponsesMap = new Map();
-
 const Chat = ({ welcome = false }: ChatProps) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
@@ -127,16 +125,36 @@ const Chat = ({ welcome = false }: ChatProps) => {
         setLoadingMessage("Creating the Quiz...");
         const { partialObjectStream } = await getQuizResponse();
         const quizId = v4();
+        setActiveQuizId(quizId);
 
+        // Modified to initialize quiz state fields
         await getStreamingObjectResponse({
           setMessages,
           partialObjectStream: partialObjectStream,
           toolId: quizId,
           toolName: "quiz",
+          // This function needs to be updated to initialize the quiz state
+          transformTool: (tool) => ({
+            ...tool,
+            // Initialize quiz state fields
+            currentQuestion: 0,
+            selectedAnswers: Array(tool.quizData.length).fill(null),
+            showResults: false,
+            answeredCorrectly: true,
+            showExplanation: false,
+            showReinforcement: false,
+            reinforcementAnswer: null,
+            reinforcementAttempts: 0,
+            maxAttemptsReached: false,
+            reinforcementQuestion: null,
+            attemptedReinforcementQuestions: Array(tool.quizData.length).fill(
+              false
+            ),
+            explanationStates: Array(tool.quizData.length).fill(false),
+            correctnessStates: Array(tool.quizData.length).fill(true),
+          }),
         });
 
-        // Automatically activate the quiz after it's created
-        setActiveQuizId(quizId);
         setLoadingMessage("");
       } else {
         setLoadingMessage("Generating the response...");
@@ -196,13 +214,32 @@ const Chat = ({ welcome = false }: ChatProps) => {
     }
   };
 
-  const activeQuiz =
-    (activeQuizId &&
-      messages.find((msg) => msg.tool?.id === activeQuizId)?.tool?.quizData) ||
-    null;
+  // New function to update quiz state in the messages array
+  const updateQuizState = (quizId: string, updates: Partial<QuizTool>) => {
+    setMessages((prevMessages) => {
+      return prevMessages.map((message) => {
+        if (message.tool && message.tool.id === quizId) {
+          return {
+            ...message,
+            tool: {
+              ...message.tool,
+              ...updates,
+            },
+          };
+        }
+        return message;
+      });
+    });
+  };
 
-  const quizTopic = messages.find((msg) => msg.tool?.id === activeQuizId)?.tool
-    ?.quizTopic;
+  // Find the active quiz tool
+  const activeQuizTool = messages.find(
+    (msg) => msg.tool?.id === activeQuizId
+  )?.tool;
+
+  // Check if the active quiz has quiz data
+  const hasQuizData =
+    activeQuizTool?.quizData && activeQuizTool.quizData.length > 0;
 
   const lastMessage = messages[messages.length - 1];
 
@@ -268,31 +305,24 @@ const Chat = ({ welcome = false }: ChatProps) => {
           input={input}
           setInput={setInput}
           handleSubmit={handleSubmit}
-          quiz={
-            activeQuiz &&
-            messages.find((msg) => msg.tool?.id === activeQuizId)?.tool
-              ?.quizData[1]
-              ? true
-              : false
-          }
+          quiz={activeQuizTool && hasQuizData ? true : false}
           pathname={pathname}
         />
       </div>
 
-      {activeQuiz &&
-        messages.find((msg) => msg.tool?.id === activeQuizId)?.tool
-          ?.quizData[1] &&
-        pathname === "/chat" && (
-          <Quiz
-            quizId={activeQuizId!}
-            quizTopic={quizTopic!}
-            quizData={activeQuiz}
-            onClose={() => setActiveQuizId(null)}
-            initial={initial}
-            animate={animate}
-            screenSize={screenSize}
-          />
-        )}
+      {activeQuizTool && hasQuizData && pathname === "/chat" && (
+        <Quiz
+          quizId={activeQuizId!}
+          quizTopic={activeQuizTool.quizTopic}
+          quizData={activeQuizTool.quizData}
+          onClose={() => setActiveQuizId(null)}
+          initial={initial}
+          animate={animate}
+          screenSize={screenSize}
+          quizTool={activeQuizTool}
+          onUpdateQuizState={updateQuizState}
+        />
+      )}
     </>
   );
 };
