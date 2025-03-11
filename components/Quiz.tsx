@@ -89,8 +89,6 @@ const Quiz = ({
       });
       updateQuizState({
         reinforcementQuestion: response,
-        reinforcementAttempts: 0,
-        maxAttemptsReached: false,
       });
     } catch (error) {
       console.error("Failed to fetch reinforcement question:", error);
@@ -157,11 +155,15 @@ const Quiz = ({
     const newQuestion =
       direction === "next" ? currentQuestion + 1 : currentQuestion - 1;
 
+    const newShowResults =
+      direction === "next" && currentQuestion === quizData.length - 1;
+
     updateQuizState({
       currentQuestion: newQuestion,
       showExplanation: explanationStates[newQuestion],
       answeredCorrectly: correctnessStates[newQuestion],
       showReinforcement: false,
+      showResults: newShowResults,
     });
 
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -171,6 +173,8 @@ const Quiz = ({
     updateQuizState({
       showResults: false,
       currentQuestion: 0,
+      showExplanation: explanationStates[0],
+      answeredCorrectly: correctnessStates[0],
     });
   };
 

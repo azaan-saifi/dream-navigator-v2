@@ -127,7 +127,6 @@ const Chat = ({ welcome = false }: ChatProps) => {
         const quizId = v4();
         setActiveQuizId(quizId);
 
-        // Modified to initialize quiz state fields
         await getStreamingObjectResponse({
           setMessages,
           partialObjectStream: partialObjectStream,
