@@ -10,6 +10,7 @@ export default {
   theme: {
     fontFamily: {
       uthmaniScript: ["var(--font-uthmaniScript)"],
+      rubikRegular: ["var(--font-rubikRegular)"],
     },
     extend: {
       colors: {

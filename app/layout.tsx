@@ -1,23 +1,21 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const uthmaniScript = localFont({
   src: "./fonts/UthmaniScript.otf",
   variable: "--font-uthmaniScript",
   weight: "100 900",
 });
+
+const rubikRegular = localFont({
+  src: "./fonts/Rubik-Regular.ttf",
+  variable: "--font-rubikRegular",
+});
+
+export const fontVariables = `${rubikRegular.variable} ${uthmaniScript.variable}`;
 
 export const metadata: Metadata = {
   title: "Dream Navigator",
@@ -32,11 +30,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${uthmaniScript.variable} bg-dark-100 antialiased`}
+      <ClerkProvider
+        appearance={{
+          baseTheme: dark,
+        }}
       >
-        {children}
-      </body>
+        <body className={`${fontVariables} bg-dark-100 antialiased`}>
+          {children}
+        </body>
+      </ClerkProvider>
     </html>
   );
 }

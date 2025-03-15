@@ -1,7 +1,6 @@
-import { readFile, writeFile } from "fs/promises";
-import { NextRequest, NextResponse } from "next/server";
+import { readFile } from "fs/promises";
+import { NextResponse } from "next/server";
 import { cwd } from "process";
-import { extractText, getDocumentProxy } from "unpdf";
 import { OpenAI } from "openai";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { v4 } from "uuid";
@@ -10,70 +9,37 @@ const openai = new OpenAI();
 const pc = new Pinecone();
 const index = pc.index(process.env.PINECONE_INDEX_NAME_QUIZ!);
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
-    const buffer = await readFile(
-      `${cwd()}/pdfs/Intensives_notes_Zeeshan_Nisar-1-80.pdf`
-    );
-    const pdf = await getDocumentProxy(new Uint8Array(buffer));
-    const { text } = await extractText(pdf, { mergePages: true });
-    const data = text.split(
-      /BAYYINAH DREAM INTENSIVE QUR’AN ARABIC LESSON DREAM INTENSIVE \d{1} /
-    );
-
-    data.shift();
-
-    interface Intensive {
-      [key: string]: string;
-    }
-
-    const intensives: Intensive[] = [];
-
-    data.forEach((item, intIndex) => {
-      const days = item.split(/DAY \d{1,2} – \d{1,2} \w+ \d{4}/);
-      days.shift();
-      days.forEach((day, dayIndex) => {
-        intensives.push({
-          [`intensive-${intIndex + 1}_day-${dayIndex + 1}`]: day,
-        });
-      });
-    });
-
-    const texts = intensives.map((item) => {
-      const key = Object.keys(item)[0];
-      const value = item[key];
-      return value;
-    });
-
-    const lectures = intensives.map((item) => {
-      const key = Object.keys(item)[0];
-      return key;
-    });
+    const data = await readFile(`${cwd()}/01_Intensive.md`, "utf-8");
+    const intensive_1 = data.split(/Day-\d{1,2}/);
+    intensive_1.shift();
+    console.log(intensive_1.length);
 
     const response = await openai.embeddings.create({
       model: "text-embedding-3-small",
-      input: texts,
+      input: intensive_1,
       encoding_format: "float",
     });
 
     const embeddings = response.data.map((item) => item.embedding);
 
     // Prepare vectors for upsert
-    const vectors = lectures.map((lecture, index) => ({
+    const vectors = intensive_1.map((text, index) => ({
       id: v4(),
       values: embeddings[index],
       metadata: {
-        section: "Intensive",
-        lecture: lecture,
-        text: texts[index],
+        section: "intensive-1",
+        day: index + 1,
+        text: text,
       },
     }));
 
     await index.upsert(vectors);
 
-    return NextResponse.json({ Success: "Embedding creation done!" });
+    return NextResponse.json({ success: "Embedding created successfully." });
   } catch (error) {
     console.log((error as Error).message);
-    return NextResponse.json({ error: `Error occured: ${error}` });
+    return NextResponse.json({ error: `Error occurred: ${error}` });
   }
 }

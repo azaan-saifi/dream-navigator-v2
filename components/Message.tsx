@@ -9,6 +9,7 @@ import { MdError } from "react-icons/md";
 import { FaUndoAlt } from "react-icons/fa";
 import { GiBrain } from "react-icons/gi";
 import { Skeleton } from "@/components/ui/skeleton";
+import AutoDetectLanguage from "./AutoDetectLanguage";
 
 export const ThinkingMessage = ({ content }: { content: string }) => {
   return (
@@ -63,20 +64,33 @@ export const AssistantMessage = ({
             {tool.quizData && (
               <motion.div
                 onClick={onQuizSelect}
-                className="flex bg-dark-hard w-auto rounded-lg border-zinc-700 border hover:border-zinc-500 hover:bg-dark-100 cursor-pointer"
+                aria-disabled={tool.quizData[2]}
+                className="flex items-stretch bg-dark-hard rounded-lg border border-zinc-700 hover:border-zinc-500 hover:bg-dark-100 cursor-pointer w-full"
               >
-                <div className="w-14 p-3 border-r-zinc-700 border-r ">
+                <div className="w-14 max-sm:w-12 flex items-center justify-center border-r border-r-zinc-700 p-3">
                   {tool.quizData[2] ? (
-                    <GiBrain className="text-white text-3xl h-full" />
+                    <GiBrain className="text-white text-3xl max-sm:text-xl" />
                   ) : (
-                    <Loader2 className="animate-spin text-dark-300 text-3xl h-full" />
+                    <Loader2 className="animate-spin text-dark-300 text-3xl" />
                   )}
                 </div>
-                <div className="text-white w-auto font-semibold p-3 text-xl">
-                  {tool.quizTopic ? (
-                    tool.quizTopic
-                  ) : (
-                    <Skeleton className="h-8 bg-dark-shimmer px-28  " />
+                <div className="flex-1 p-3 flex flex-col justify-between">
+                  <div className="text-white font-semibold">
+                    {tool.quizTopic ? (
+                      <div className="max-w-full overflow-hidden">
+                        <AutoDetectLanguage
+                          className="max-md:text-[16px] block max-sm:max-w-48 max-sm:truncate"
+                          text={tool.quizTopic}
+                        />
+                      </div>
+                    ) : (
+                      <Skeleton className="h-6 bg-dark-shimmer w-full max-w-xs" />
+                    )}
+                  </div>
+                  {tool.quizData[2] && (
+                    <div className="text-sm text-zinc-400 mt-1">
+                      <AutoDetectLanguage text="Click to open" />
+                    </div>
                   )}
                 </div>
               </motion.div>

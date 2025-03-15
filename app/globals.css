@@ -113,6 +113,12 @@
     @apply bg-background text-foreground;
   }
 
+  *::selection {
+    background-color: white;
+    color: black;
+    border-radius: 0.5rem;
+  }
+
   .hide-scrollbar {
     overflow: scroll;
     scrollbar-width: none; /* For Firefox */

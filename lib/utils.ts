@@ -57,8 +57,27 @@ Analyze each user query and respond as follows:
   *Example: "I am so weak in numbers in arabic, could you suggest anything that can help?"* → "resource"
   *Example: "I am an 18 yr old girl finding hard-time wearing my hijab, could you recommend something that can help me with that?"* → "resource"
 
-- If the query relates to testing knowledge or practicing content from a specific lecture, respond with only: "quiz"
-  *Example: "I want to test my understanding of the lecture on Arabic root words"* → "quiz"
+- If the query relates to testing knowledge or practicing content from a specific lecture then now it's time to understand how you'll respond to Quiz queries since there are multiple possibilities:
+  --> GOAL: We need to collect 2 things from the query = {section name}, {day(s) name}.
+
+  ## Possibility 1:
+    - Query specfies both of them:
+    *Example: "Create a quiz on Dream Intensive one day 10"* → "quiz", "intensive-1", [10]
+  
+  ## Possibility 2:
+    - Query specfies one of them:
+    *Example: "Create a quiz on Dream Intensive 2"* → "quiz", "intensive-2"
+    *Example: "Create a quiz on day 4"* → "quiz", [4]
+
+  ## Possibility 3:
+    - Query specfies timeline of days:
+    *Example: "Create a quiz on Dream Intensive 1 from day four to 7"* → "quiz", "intensive-1", [4, 5, 6, 7]
+    - Query specifies more than 10 days then give only first 10:
+    *Example: "Create a quiz on Dream Intensive 2 from day 2 to thirteen"* → "quiz", "intensive-2", [2, ..., ..., 12]
+
+  ## Possibility 4:
+    - Query specfies more than 1 sections then give the first one:
+    *Example: "Create a quiz on Intensive 2 and 3"* → "quiz", "intensive-2"
 
 - For general questions unrelated to the three functions above, respond with only: "general"
 
@@ -118,6 +137,50 @@ export function getResourcePrompt({
   - YOU MUST Provide the resource link in this format: [resourceName](resourceLink)
   - IMPORTANT!!: If you didn't find in the context that can satisfy the user PERFECTLY, politely say that you couldn't find anything relevant to that and also ask them to provide more info.
 
+  `;
+}
+
+export function getQuizResponsePrompt({
+  context,
+  query,
+}: {
+  context: any[];
+  query: string;
+}) {
+  return `
+  You are a VERY creative and expert quiz designer with mastery in classical Arabic, tasked with creating challenging, concept-driven MCQs based on the provided lecture Notes to test a student's deep understanding. Follow these guidelines:
+
+1. Thoroughly analyze the lecture content to identify core concepts, principles, and their practical applications.
+
+2. Create questions that test deeper understanding rather than simple recall. Questions should:
+   - Focus on areas where learners commonly make mistakes or misunderstand.
+   - Require application of concepts to new scenarios
+   - Test the ability to synthesize multiple ideas from the lecture
+   - Evaluate critical thinking about the material
+   - Challenge students to recognize implications or extensions of the concepts
+
+3. For each question:
+   - Craft a clear stem that presents a problem or scenario
+   - Provide exactly one correct answer not multiple possibilities.
+   - Create plausible wrong answers that reflect common misconceptions or partial understanding. Avoid generic/obvious distractors.
+
+4. Create questions at varying difficulty levels:
+   - 20% basic understanding (but not simple recall)
+   - 50% application of concepts
+   - 30% advanced analysis or synthesis
+
+5. Only use information that can be reasonably derived from the lecture transcript. Do not introduce concepts not covered in the material.
+
+6. Design questions that would challenge even students who have memorized the lecture but haven't truly understood the concepts.
+
+7. Where appropriate, include practical scenarios where the concepts would be applied in real-world contexts.
+
+8. Ensure all questions and answer choices are culturally appropriate for Arabic language learners.
+
+9. Use the same terminology and explanatory frameworks that the teacher used in the lectures. Students are familiar with these specific terms, so maintain consistency with how concepts were originally taught.
+
+## Here is the Relevant Context: ${JSON.stringify(context)}
+## Here is the user's query: ${query}
   `;
 }
 

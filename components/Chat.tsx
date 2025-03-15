@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import Welcome from "./Welcome";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -13,7 +13,10 @@ import TextArea from "./TextArea";
 import {
   getGeneralResponse,
   getQueryType,
+  getQuizContext,
   getQuizResponse,
+  // getQuizUnstructuredResponse,
+  // getQuizUnstructuredResponse,
   getResourceResponse,
   getResources,
   getVideoResponse,
@@ -22,22 +25,26 @@ import {
 import { getStreamingObjectResponse, getStreamingResponse } from "@/lib/utils";
 import Quiz from "./Quiz";
 import { v4 } from "uuid";
+import { RecordMetadataValue } from "@pinecone-database/pinecone";
 
 const MemoizedUserMessage = React.memo(UserMessage);
 const MemoizedAssistantMessage = React.memo(AssistantMessage);
 
 const Chat = ({ welcome = false }: ChatProps) => {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "user",
-      content: `This domain is for use in illustrative examples in documents.`,
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState("");
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const [screenSize, setScreenSize] = useState("sm");
+  const [quizForm, setQuizForm] = useState<quizForm | undefined>();
+  const [quizContext, setQuizContext] = useState<
+    {
+      day: RecordMetadataValue | undefined;
+      sectionName: RecordMetadataValue | undefined;
+      lectureNotes: RecordMetadataValue | undefined;
+    }[]
+  >([]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -74,7 +81,7 @@ const Chat = ({ welcome = false }: ChatProps) => {
     if (initialMessage) {
       const newMessage: Message[] = [{ role: "user", content: initialMessage }];
       setMessages(newMessage);
-      // localStorage.removeItem("initialMessage"); // Consider removing after processing
+      localStorage.removeItem("initialMessage");
       fetchResponse(newMessage);
     } else if (pathname !== "/") {
       router.push("/");
@@ -88,18 +95,10 @@ const Chat = ({ welcome = false }: ChatProps) => {
     const query = storeMessages[storeMessages.length - 1].content;
 
     try {
-      // Determine query type based on content
-      const data: QueryType = query.includes("quiz")
-        ? "quiz"
-        : query.includes("video")
-        ? "video"
-        : query.includes("resource")
-        ? "resource"
-        : "general";
-
+      const data = await getQueryType({ query });
       setLoadingMessage("");
 
-      if (data === "video") {
+      if (data.queryType === "video") {
         setLoadingMessage("Searching through the lectures...");
         const relevantChunks = await getVideoTimestamps({ input: query });
         const videoResponse = await getVideoResponse({ query, relevantChunks });
@@ -108,7 +107,7 @@ const Chat = ({ welcome = false }: ChatProps) => {
           response: videoResponse,
           setLoadingMessage,
         });
-      } else if (data === "resource") {
+      } else if (data.queryType === "resource") {
         setLoadingMessage("Finding the relevant resources...");
         const relevantResources = await getResources({ input: query });
         const resourceResponse = await getResourceResponse({
@@ -121,9 +120,37 @@ const Chat = ({ welcome = false }: ChatProps) => {
           response: resourceResponse,
           setLoadingMessage,
         });
-      } else if (data === "quiz") {
-        setLoadingMessage("Creating the Quiz...");
-        const { partialObjectStream } = await getQuizResponse();
+      } else if (data.queryType === "quiz") {
+        setLoadingMessage("Searching for the Knowledge...");
+
+        let context;
+
+        if (data.quizQueryProps?.lecture && data.quizQueryProps?.section) {
+          context = await getQuizContext({
+            section: data.quizQueryProps?.section,
+            day: data.quizQueryProps?.lecture,
+          });
+        }
+
+        if (!context) throw error;
+        setQuizContext(context);
+
+        // // setLoadingMessage("Reasoning before the response...");
+        // const { text } = await getQuizUnstructuredResponse({
+        //   context,
+        //   query,
+        // });
+
+        // console.log("Reasoning", reasoning);
+        // console.log("text", text);
+
+        setLoadingMessage("Initialising quiz creation...");
+
+        const { partialObjectStream } = await getQuizResponse({
+          context,
+          query,
+        });
+
         const quizId = v4();
         setActiveQuizId(quizId);
 
@@ -157,29 +184,23 @@ const Chat = ({ welcome = false }: ChatProps) => {
         setLoadingMessage("");
       } else {
         setLoadingMessage("Generating the response...");
-        // const generalResponse = await getGeneralResponse({
-        //   messages: storeMessages,
-        // });
+        const generalResponse = await getGeneralResponse({
+          messages: storeMessages,
+        });
 
-        // await getStreamingResponse({
-        //   setMessages,
-        //   response: generalResponse,
-        //   setLoadingMessage,
-        // });
+        await getStreamingResponse({
+          setMessages,
+          response: generalResponse,
+          setLoadingMessage,
+        });
 
-        // For now, using dummy response
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: `Lorem Ipsum is simply dummy text`,
-          },
-        ]);
         setLoadingMessage("");
       }
     } catch (error) {
       console.error(error);
       setError("Something went wrong, Click to regenerate response");
+    } finally {
+      setLoadingMessage("");
     }
   };
 
@@ -237,8 +258,7 @@ const Chat = ({ welcome = false }: ChatProps) => {
   )?.tool;
 
   // Check if the active quiz has quiz data
-  const hasQuizData =
-    activeQuizTool?.quizData && activeQuizTool.quizData.length > 0;
+  const hasQuizData = activeQuizTool?.quizData && activeQuizTool.quizData[1];
 
   const lastMessage = messages[messages.length - 1];
 
@@ -319,6 +339,7 @@ const Chat = ({ welcome = false }: ChatProps) => {
           animate={animate}
           screenSize={screenSize}
           quizTool={activeQuizTool}
+          context={quizContext}
           onUpdateQuizState={updateQuizState}
         />
       )}

@@ -1,8 +1,8 @@
 import React from "react";
-// import { Button } from "./ui/button";
 import Link from "next/link";
-// import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-// import HeroVideoDialog from "./ui/hero-video-dialog";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Button } from "./ui/button";
+import HeroVideoDialog from "./ui/hero-video-dialog";
 
 const Navbar = () => {
   return (
@@ -11,11 +11,11 @@ const Navbar = () => {
         <span className="text-primary-100">Dream</span>Navigator
       </Link>
       <div className="flex w-2/3 items-center justify-end gap-4 max-sm:gap-2">
-        {/* <HeroVideoDialog
+        <HeroVideoDialog
           animationStyle="from-center"
           videoSrc="https://www.youtube.com/embed/jWDtJVdbI3g?si=XevzIzxLCLbWkar5"
-        /> */}
-        {/* <SignedOut>
+        />
+        <SignedOut>
           <Link href={"/sign-in"} className="max-sm:text-xs ">
             <Button className="rounded-full bg-white hover:bg-zinc-100">
               <p className="max-sm:text-xs sm:px-2">Sign In</p>
@@ -33,7 +33,7 @@ const Navbar = () => {
               },
             }}
           />
-        </SignedIn> */}
+        </SignedIn>
       </div>
     </nav>
   );

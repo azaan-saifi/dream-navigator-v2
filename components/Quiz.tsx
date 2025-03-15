@@ -5,6 +5,7 @@ import { FaTimes } from "react-icons/fa";
 import { Skeleton } from "./ui/skeleton";
 import { Button } from "./ui/button";
 import { getReinforcementQuestion } from "@/lib/actions/messages.action";
+import AutoDetectLanguage from "./AutoDetectLanguage";
 
 interface Animate {
   [key: string]: any;
@@ -19,6 +20,7 @@ interface QuizProps {
   animate: Animate;
   screenSize: string;
   quizTool: QuizTool;
+  context: any[];
   onUpdateQuizState: (quizId: string, updates: Partial<QuizTool>) => void;
 }
 
@@ -31,6 +33,7 @@ const Quiz = ({
   animate,
   screenSize,
   quizTool,
+  context,
   onUpdateQuizState,
 }: QuizProps) => {
   const [loadingReinforcement, setLoadingReinforcement] = useState(false);
@@ -80,12 +83,23 @@ const Quiz = ({
     });
   };
 
-  const fetchReinforcementQuestion = async () => {
+  const fetchReinforcementQuestion = async (
+    useReinforcementAsContext = false
+  ) => {
     setLoadingReinforcement(true);
     try {
       const response = await getReinforcementQuestion({
-        question: quizData[currentQuestion],
-        incorrectOption: selectedAnswers[currentQuestion]!,
+        context,
+        // Use the previous reinforcement question if requested, otherwise use the original quiz question
+        question:
+          useReinforcementAsContext && reinforcementQuestion
+            ? reinforcementQuestion
+            : quizData[currentQuestion],
+        // Use the previous reinforcement answer if requested, otherwise use the original selected answer
+        incorrectOption:
+          useReinforcementAsContext && reinforcementAnswer !== null
+            ? reinforcementAnswer
+            : selectedAnswers[currentQuestion]!,
       });
       updateQuizState({
         reinforcementQuestion: response,
@@ -108,7 +122,7 @@ const Quiz = ({
       reinforcementAnswer: null,
     });
 
-    await fetchReinforcementQuestion();
+    await fetchReinforcementQuestion(false); // Initial reinforcement uses the original question
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -128,11 +142,13 @@ const Quiz = ({
   };
 
   const handleTryAgain = async () => {
+    console.log(reinforcementQuestion);
     updateQuizState({
       showExplanation: false,
       reinforcementAnswer: null,
     });
-    await fetchReinforcementQuestion();
+    // Pass true to use the previous reinforcement question as context for the next one
+    await fetchReinforcementQuestion(true);
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -214,16 +230,16 @@ const Quiz = ({
     <motion.div
       initial={initial[screenSize]}
       animate={animate[screenSize]}
-      className="max-md:fixed max-md:size-full md:w-full md:mr-3 xl:w-[40%] border border-zinc-600 rounded-lg h-[560px] mx-auto bg-dark-200 shadow-md flex flex-col text-white"
+      className="max-md:fixed max-md:top-20 max-md:inset-0 max-md:flex max-md:flex-col md:w-full md:mr-3 xl:w-[40%] border border-zinc-600 rounded-lg md:h-[560px] mx-auto bg-dark-200 shadow-md flex flex-col text-white"
     >
       {/* Fixed Quiz Header */}
       <div className="flex flex-col gap-3 p-6 bg-dark-100 border-b rounded-t-lg border-zinc-600">
-        <div className="w-full flex">
-          <h2 className="w-full text-2xl font-bold">
+        <div className="w-full flex items-start gap-4">
+          <h2 className="w-full text-2xl max-sm:text-xl font-bold">
             {!quizTopic && (
               <Skeleton className="h-8 w-[60%] rounded-lg bg-dark-shimmer" />
             )}
-            {quizTopic}
+            <AutoDetectLanguage text={quizTopic} />
           </h2>
           <div
             onClick={onClose}
@@ -234,7 +250,7 @@ const Quiz = ({
         </div>
         {!showResults && (
           <div className="mt-2">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm max-sm:text-xs">
               {quizData[2] ? (
                 <>
                   <span>
@@ -277,7 +293,7 @@ const Quiz = ({
           <div className="flex flex-col items-center justify-center h-full">
             <div className="text-4xl mb-4">🎉</div>
             <h3 className="text-2xl font-bold text-center mb-2">
-              Quiz Completed!
+              <AutoDetectLanguage text="Quiz Completed!" />
             </h3>
             <Button
               onClick={handleReviewQuiz}
@@ -311,12 +327,13 @@ const Quiz = ({
               </div>
             ) : reinforcementQuestion ? (
               <>
-                <h4 className="text-lg font-semibold mb-4">
-                  {reinforcementQuestion.question}
-                </h4>
+                <AutoDetectLanguage
+                  className="text-lg font-semibold mb-4"
+                  text={reinforcementQuestion.question}
+                />
                 <div className="space-y-3">
                   {reinforcementQuestion.options.map(
-                    (option: number, index: number) => {
+                    (option: string, index: number) => {
                       const isSelected = reinforcementAnswer === index;
                       const isCorrect =
                         index === reinforcementQuestion.correctAnswer;
@@ -331,23 +348,30 @@ const Quiz = ({
                             showExplanation
                           )}
                         >
-                          <div className="flex items-center">
-                            <div
-                              className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
-                                showExplanation && isCorrect
-                                  ? "bg-green-500"
-                                  : isSelected && showExplanation && !isCorrect
-                                  ? "bg-primary-100"
-                                  : isSelected
-                                  ? "bg-dark-300"
-                                  : "bg-dark-100"
-                              }`}
-                            >
-                              <span className="text-xs">
-                                {String.fromCharCode(65 + index)}
-                              </span>
+                          <div className="flex items-start">
+                            <div className="flex items-center justify-center">
+                              <div
+                                className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
+                                  showExplanation && isCorrect
+                                    ? "bg-green-500"
+                                    : isSelected &&
+                                      showExplanation &&
+                                      !isCorrect
+                                    ? "bg-primary-100"
+                                    : isSelected
+                                    ? "bg-dark-300"
+                                    : "bg-dark-100"
+                                }`}
+                              >
+                                <span className="text-sm">
+                                  {String.fromCharCode(65 + index)}
+                                </span>
+                              </div>
                             </div>
-                            <span className="text-white">{option}</span>
+                            <AutoDetectLanguage
+                              className="text-white antialiased"
+                              text={option}
+                            />
                           </div>
 
                           {showExplanation && isCorrect && (
@@ -364,7 +388,9 @@ const Quiz = ({
                 {showExplanation && (
                   <div className="mt-4 p-3 bg-dark-300 rounded-lg border border-zinc-700">
                     <p className="font-semibold mb-1">Explanation:</p>
-                    <p>{reinforcementQuestion.explanation}</p>
+                    <AutoDetectLanguage
+                      text={reinforcementQuestion.explanation}
+                    />
 
                     <div className="mt-4 flex justify-center">
                       {answeredCorrectly ? (
@@ -376,7 +402,7 @@ const Quiz = ({
                         </Button>
                       ) : maxAttemptsReached ? (
                         <div className="flex flex-col items-center">
-                          <p className="text-amber-400 mb-4">
+                          <p className="text-amber-400 font-bold mb-4">
                             You should revisit this topic
                           </p>
                           <Button
@@ -409,7 +435,9 @@ const Quiz = ({
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">
               {quizData[2] ? (
-                quizData[currentQuestion]?.question
+                <AutoDetectLanguage
+                  text={quizData[currentQuestion]?.question}
+                />
               ) : (
                 <Skeleton className="w-full h-7 bg-dark-shimmer" />
               )}
@@ -437,23 +465,28 @@ const Quiz = ({
                       )}`}
                     >
                       {quizData[2] ? (
-                        <div className="flex items-center">
-                          <div
-                            className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
-                              showExplanation && isCorrect
-                                ? "bg-green-500"
-                                : isSelected && showExplanation && !isCorrect
-                                ? "bg-primary-100"
-                                : isSelected
-                                ? "bg-dark-300"
-                                : "bg-dark-100"
-                            }`}
-                          >
-                            <span className="text-xs">
-                              {String.fromCharCode(65 + index)}
-                            </span>
+                        <div className="flex items-start">
+                          <div className="flex items-center justify-center">
+                            <div
+                              className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
+                                showExplanation && isCorrect
+                                  ? "bg-green-500"
+                                  : isSelected && showExplanation && !isCorrect
+                                  ? "bg-primary-100"
+                                  : isSelected
+                                  ? "bg-dark-300"
+                                  : "bg-dark-100"
+                              }`}
+                            >
+                              <span className="text-sm">
+                                {String.fromCharCode(65 + index)}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-white">{option}</span>
+                          <AutoDetectLanguage
+                            className="text-white text-sm"
+                            text={option}
+                          />
                         </div>
                       ) : (
                         <>
@@ -492,12 +525,14 @@ const Quiz = ({
             {showExplanation && !answeredCorrectly && (
               <div className="mt-4 p-3 bg-dark-300 rounded-lg border border-zinc-700">
                 <p className="font-semibold mb-1">Why was that incorrect?</p>
-                <p>{quizData && quizData[currentQuestion]?.explanation}</p>
+                <AutoDetectLanguage
+                  text={quizData && quizData[currentQuestion]?.explanation}
+                />
                 {!hasAttemptedReinforcement ? (
                   <div className="mt-4 flex justify-center">
                     <button
                       onClick={handleStartReinforcement}
-                      className="animate-pulse px-4 py-2 rounded-md bg-gold-transparant hover:animate-none text-gold-100 border border-gold-100 font-medium"
+                      className="px-4 py-2 rounded-md bg-gold-transparant hover:bg-[#ff940942] hover:duration-200 text-gold-100 border border-gold-100 font-medium"
                     >
                       Try Reinforcement Question
                     </button>

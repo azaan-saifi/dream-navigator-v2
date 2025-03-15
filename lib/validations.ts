@@ -23,8 +23,7 @@ export const quizResponseScheme = z.object({
     .string()
     .describe(
       "say Sure that I will create a quiz on the topic 'user asked for'"
-    )
-    .min(120),
+    ),
   quizData: quizDataSchema,
 });
 

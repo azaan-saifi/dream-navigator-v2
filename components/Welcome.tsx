@@ -10,20 +10,20 @@ const Welcome = () => {
           </p>
           <div className="text-3xl font-bold max-sm:text-lg">
             <span className="text-dark-300">Welcome to</span>{" "}
-            <span className="text-primary-100">Dream</span>
+            <span className="text-primary-100 font-rubikRegular">Dream</span>
             Navigator
           </div>
-          <p className="-mt-3 max-sm:text-xs">
+          <p className="-mt-3 max-sm:text-xs font-rubikRegular">
             An intelligent assistant built for the Dream Students Community.
           </p>
         </div>
         <div className="flex items-center justify-center gap-5 max-lg:flex-col max-sm:w-full max-sm:gap-3">
-          <p className="rounded-xl border border-zinc-700 bg-dark-200 p-4 text-left max-sm:text-xs">
+          <p className="rounded-xl border border-zinc-700 bg-dark-200 p-4 text-left max-sm:text-xs font-rubikRegular">
             <b>Ask specific questions </b>about Ustadh Nouman Ali Khan&apos;s
             lectures, and the chatbot will provide you with{" "}
             <b>precise answers</b> along with <b>clickable timestamps.</b>
           </p>
-          <p className="rounded-xl border border-zinc-700 bg-dark-200 p-4 text-left max-sm:text-xs">
+          <p className="rounded-xl border border-zinc-700 bg-dark-200 p-4 text-left max-sm:text-xs font-rubikRegular">
             <b>Request study resources</b>, and you&apos;ll instantly receive
             the relevant resource links to enhance your learning.
           </p>

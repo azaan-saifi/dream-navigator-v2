@@ -1,20 +1,29 @@
 "use server";
 import {
   getQueryTypePrompt,
+  getQuizResponsePrompt,
   getResourcePrompt,
   getVideoPrompt,
   secondsToTimeFormat,
 } from "@/lib/utils";
 import { openai } from "@ai-sdk/openai";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { generateObject, generateText, streamObject, streamText } from "ai";
+import {
+  extractReasoningMiddleware,
+  generateObject,
+  generateText,
+  streamObject,
+  streamText,
+  wrapLanguageModel,
+} from "ai";
 import OpenAI from "openai";
 import { z } from "zod";
-import {
-  quizDataSchema,
-  quizResponseScheme,
-  reinforcementSchema,
-} from "../validations";
+import { quizResponseScheme, reinforcementSchema } from "../validations";
+import { anthropic } from "@ai-sdk/anthropic";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { groq } from "@ai-sdk/groq";
+import { google } from "@ai-sdk/google";
+import { deepseek } from "@ai-sdk/deepseek";
 
 const embeddingModel = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -25,8 +34,13 @@ const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!,
 });
 
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY!,
+});
+
 const index = pinecone.Index(process.env.PINECONE_INDEX_NAME!);
 const resourceIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME_RESOURCE!);
+const quizIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME_QUIZ!);
 
 export async function getVideoTimestamps({ input }: { input: string }) {
   try {
@@ -79,6 +93,7 @@ export async function getVideoResponse({
 }) {
   try {
     const { textStream } = streamText({
+      // model: openai("gpt-4o-mini"),
       model: openai("gpt-4o-mini"),
       prompt: getVideoPrompt({ query, relevantChunks }),
     });
@@ -152,7 +167,9 @@ export async function getQueryType({ query }: { query: string }) {
   try {
     const { object } = await generateObject({
       prompt: getQueryTypePrompt({ query }),
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-4o"),
+      // model: openrouter("deepseek/deepseek-chat"),
+      // model: openai("gpt-4o-mini"),
       schema: z.object({
         queryType: z.union([
           z.literal("video"),
@@ -160,9 +177,20 @@ export async function getQueryType({ query }: { query: string }) {
           z.literal("quiz"),
           z.literal("general"),
         ]),
+        quizQueryProps: z.object({
+          section: z
+            .union([
+              z.literal("intensive-1"),
+              z.literal("intensive-2"),
+              z.literal("intensive-3"),
+              z.literal("intensive-4"),
+            ])
+            .optional(),
+          lecture: z.array(z.number().min(1).max(10)).optional(),
+        }),
       }),
     });
-    return object.queryType;
+    return object;
   } catch (error) {
     console.log(error);
     throw error;
@@ -183,7 +211,7 @@ You are Dream Navigator, developed by the Dream Students community to assist Ara
 You have exactly three specialized functions:
 1. **Video Search**: Finding specific video content from Ustadh Nouman's lectures
 2. **Resource Retrieval**: Providing educational materials
-3. **Quiz Creation**: Generating assessment questions on lecture content
+3. **Quiz Creation**: Generating assessment questions on lecture content, Query must include the section name and for which day the user wants the quiz on.
 
 - Or just answer user's query like helping them in grasping any arabic concepts or anything they want.
 - Be as friendly, attractive and impressive as possible while answering.
@@ -201,13 +229,97 @@ You have exactly three specialized functions:
   }
 }
 
-export async function getQuizResponse() {
+export async function getQuizContext({
+  section,
+  day,
+}: {
+  section: string;
+  day: number[];
+}) {
+  try {
+    const dummyVector = new Array(1536).fill(0);
+    const filter = {
+      section,
+      day:
+        day.length > 1
+          ? { $gte: day[0], $lte: day[day.length - 1] }
+          : { $eq: day[0] },
+    };
+
+    const query = await quizIndex.query({
+      vector: dummyVector,
+      topK: day.length,
+      includeMetadata: true,
+      filter,
+    });
+
+    const response = query.matches.map((match) => ({
+      day: match.metadata?.day,
+      sectionName: match.metadata?.section,
+      lectureNotes: match.metadata?.text,
+    }));
+
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function getQuizUnstructuredResponse({
+  context,
+  query,
+}: {
+  context: any[];
+  query: string;
+}) {
+  try {
+    // const enhancedModel = wrapLanguageModel({
+    //   model: openrouter("deepseek/deepseek-r1:free"),
+    //   middleware: extractReasoningMiddleware({ tagName: "think" }),
+    // });
+
+    const { text } = await generateText({
+      model: anthropic("claude-3-7-sonnet-20250219"),
+      // model: enhancedModel,
+      prompt: getQuizResponsePrompt({ context, query }),
+    });
+
+    return { text };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+// export async function getQuizResponse({ text }: { text: string }) {
+//   try {
+//     const { partialObjectStream } = streamObject({
+//       model: openai("gpt-4o-mini"),
+//       schema: quizResponseScheme,
+//       prompt: `Extract the desired information from this text: \n` + text,
+//     });
+
+//     return { partialObjectStream };
+//   } catch (error) {
+//     console.log(error);
+//     throw error;
+//   }
+// }
+
+export async function getQuizResponse({
+  context,
+  query,
+}: {
+  context: any[];
+  query: string;
+}) {
   try {
     const { partialObjectStream } = streamObject({
-      system: `You are a helpful assistant whose job is to create a MCQ quiz based on user's query.`,
+      // model: deepseek("deepseek-chat"),
+      // model: anthropic("claude-3-7-sonnet-20250219"),
       model: openai("gpt-4o-mini"),
       schema: quizResponseScheme,
-      prompt: "Create a quiz on french revolution.",
+      prompt: getQuizResponsePrompt({ context, query }),
     });
 
     return { partialObjectStream };
@@ -218,45 +330,45 @@ export async function getQuizResponse() {
 }
 
 export async function getReinforcementQuestion({
+  context,
   question,
   incorrectOption,
 }: {
+  context: any[];
   question: QuizQuestion;
   incorrectOption: number;
 }) {
   try {
     const { object } = await generateObject({
       prompt: `
-# Reinforcement Question Generator
+You are an expert Arabic language tutor specializing in reinforcement learning. A student has answered a quiz question incorrectly, and you need to create a follow-up question to strengthen their understanding of the concept they struggled with.
 
-You are an adaptive learning expert specializing in creating targeted follow-up questions based on student misconceptions. Your task is to create a highly effective reinforcement question when a learner answers incorrectly.
+ORIGINAL QUESTION (That user got incorrect with the correct option number): ${JSON.stringify(
+        question
+      )}
+STUDENT'S INCORRECT ANSWER (the option user chose): ${incorrectOption}
+RELEVANT CONTEXT (from which the original question was made): ${JSON.stringify(
+        context
+      )}
 
-## Input Context
-Original question the user answered incorrectly: ${question}
-and here is the incorrect option index he chose for this question: ${incorrectOption}
-
-## Instructions
-1. **Analyze the misconception**: Identify the specific knowledge gap or misunderstanding that likely led to the incorrect answer.
-
-2. **Create a new question** that:
-   - Approaches the same concept from a different angle
-   - Is slightly easier than the original question (70-80% difficulty)
-   - Includes clear, unambiguous answer choices
-   - Has one definitively correct answer and plausible distractors
-   - Isolates the specific concept the learner struggled with
-
-3. **Ensure the explanation**:
-   - Explicitly addresses why each incorrect option is wrong
-   - Provides a concise, memorable explanation of the core concept
-   - Connects back to the original question to reinforce understanding
+Create a new question that:
+1. Targets the same concept but approaches it from a different angle
+2. Addresses the specific misconception revealed by their incorrect answer
+3. Is slightly simpler than the original question but still challenges understanding
+4. Provides subtle guidance toward the correct understanding
+5. Uses the same terminology as found in the lecture materials
+6. Always put harakas if that's not the part of the challenge
 
 ## Guidelines
 - Focus on fundamental understanding rather than memorization
 - Use concrete examples when possible
 - Keep language clear and accessible
 - Ensure the question tests understanding, not just recall
+
+The question should help the student recognize their misunderstanding while building confidence in the correct application of the concept.
       `,
       model: openai("gpt-4o-mini"),
+      // model: anthropic("claude-3-7-sonnet-20250219"),
       schema: reinforcementSchema,
     });
 

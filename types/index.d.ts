@@ -102,3 +102,8 @@ interface Animate {
 }
 
 type QueryType = "video" | "resource" | "quiz" | "general";
+
+interface quizForm {
+  section: string | undefined;
+  lecture: string | undefined;
+}
