@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Welcome from "./Welcome";
 import { useRouter, usePathname } from "next/navigation";
+import { toast } from "sonner";
 import {
   AssistantMessage,
   ErrorMessage,
@@ -30,7 +31,7 @@ import { RecordMetadataValue } from "@pinecone-database/pinecone";
 const MemoizedUserMessage = React.memo(UserMessage);
 const MemoizedAssistantMessage = React.memo(AssistantMessage);
 
-const Chat = ({ welcome = false }: ChatProps) => {
+const Chat = ({ welcome = false, userId }: ChatProps) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessage, setLoadingMessage] = useState("");
@@ -134,19 +135,21 @@ const Chat = ({ welcome = false }: ChatProps) => {
 
         if (!context) throw error;
         setQuizContext(context);
+        console.log(context);
 
-        // // setLoadingMessage("Reasoning before the response...");
-        // const { text } = await getQuizUnstructuredResponse({
-        //   context,
-        //   query,
-        // });
+        // // // setLoadingMessage("Reasoning before the response...");
+        // // const { text } = await getQuizUnstructuredResponse({
+        // //   context,
+        // //   query,
+        // // });
 
-        // console.log("Reasoning", reasoning);
-        // console.log("text", text);
+        // // console.log("Reasoning", reasoning);
+        // // console.log("text", text);
 
         setLoadingMessage("Initialising quiz creation...");
 
         const { partialObjectStream } = await getQuizResponse({
+          messages,
           context,
           query,
         });
@@ -159,10 +162,8 @@ const Chat = ({ welcome = false }: ChatProps) => {
           partialObjectStream: partialObjectStream,
           toolId: quizId,
           toolName: "quiz",
-          // This function needs to be updated to initialize the quiz state
           transformTool: (tool) => ({
             ...tool,
-            // Initialize quiz state fields
             currentQuestion: 0,
             selectedAnswers: Array(tool.quizData.length).fill(null),
             showResults: false,

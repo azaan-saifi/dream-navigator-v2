@@ -14,8 +14,8 @@ export const quizDataSchema = z
       explanation: z.string().describe("Why the answer is correct"),
     })
   )
-  .min(3)
-  .max(3);
+  .min(5)
+  .max(5);
 
 export const quizResponseScheme = z.object({
   quizTopic: z.string().describe("Topic of the quiz"),

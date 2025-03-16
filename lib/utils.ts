@@ -148,7 +148,7 @@ export function getQuizResponsePrompt({
   query: string;
 }) {
   return `
-  You are a VERY creative and expert quiz designer with mastery in classical Arabic, tasked with creating challenging, concept-driven MCQs based on the provided lecture Notes to test a student's deep understanding. Follow these guidelines:
+  You are an expert quiz designer with mastery in classical Arabic, tasked with creating challenging, concept-driven MCQs based on the provided lecture Notes to test a student's deep understanding. Follow these guidelines:
 
 1. Thoroughly analyze the lecture content to identify core concepts, principles, and their practical applications.
 
@@ -178,6 +178,8 @@ export function getQuizResponsePrompt({
 8. Ensure all questions and answer choices are culturally appropriate for Arabic language learners.
 
 9. Use the same terminology and explanatory frameworks that the teacher used in the lectures. Students are familiar with these specific terms, so maintain consistency with how concepts were originally taught.
+
+10. Make sure YOU DON'T REPEAT THE SAME QUESTIONS THAT YOU'VE ALREADY GENERATED.
 
 ## Here is the Relevant Context: ${JSON.stringify(context)}
 ## Here is the user's query: ${query}

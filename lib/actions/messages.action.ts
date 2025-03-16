@@ -6,24 +6,22 @@ import {
   getVideoPrompt,
   secondsToTimeFormat,
 } from "@/lib/utils";
-import { openai } from "@ai-sdk/openai";
 import { Pinecone } from "@pinecone-database/pinecone";
-import {
-  extractReasoningMiddleware,
-  generateObject,
-  generateText,
-  streamObject,
-  streamText,
-  wrapLanguageModel,
-} from "ai";
+import { generateObject, streamObject, streamText } from "ai";
 import OpenAI from "openai";
 import { z } from "zod";
 import { quizResponseScheme, reinforcementSchema } from "../validations";
-import { anthropic } from "@ai-sdk/anthropic";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { groq } from "@ai-sdk/groq";
-import { google } from "@ai-sdk/google";
-import { deepseek } from "@ai-sdk/deepseek";
+import { createAzure } from "@ai-sdk/azure";
+
+const resourceNameMatch =
+  process.env.AZURE_ENDPOINT!.match(/https:\/\/([^.]+)/);
+const resourceName = resourceNameMatch ? resourceNameMatch[1] : "";
+const azure = createAzure({
+  apiKey: process.env.AZURE_API_KEY!,
+  resourceName,
+  apiVersion: "2024-05-01-preview", // Match your deployment's version
+});
 
 const embeddingModel = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -93,8 +91,7 @@ export async function getVideoResponse({
 }) {
   try {
     const { textStream } = streamText({
-      // model: openai("gpt-4o-mini"),
-      model: openai("gpt-4o-mini"),
+      model: azure("DeepSeek-V3"),
       prompt: getVideoPrompt({ query, relevantChunks }),
     });
 
@@ -152,7 +149,7 @@ export async function getResourceResponse({
 }) {
   try {
     const { textStream } = streamText({
-      model: openai("gpt-4o-mini"),
+      model: azure("DeepSeek-V3"),
       prompt: getResourcePrompt({ query, relevantResources }),
     });
 
@@ -167,9 +164,7 @@ export async function getQueryType({ query }: { query: string }) {
   try {
     const { object } = await generateObject({
       prompt: getQueryTypePrompt({ query }),
-      model: openai("gpt-4o"),
-      // model: openrouter("deepseek/deepseek-chat"),
-      // model: openai("gpt-4o-mini"),
+      model: azure("DeepSeek-V3"),
       schema: z.object({
         queryType: z.union([
           z.literal("video"),
@@ -219,7 +214,7 @@ You have exactly three specialized functions:
 
       `,
       messages,
-      model: openai("gpt-4o-mini"),
+      model: azure("DeepSeek-V3"),
     });
 
     return textStream;
@@ -265,31 +260,31 @@ export async function getQuizContext({
   }
 }
 
-export async function getQuizUnstructuredResponse({
-  context,
-  query,
-}: {
-  context: any[];
-  query: string;
-}) {
-  try {
-    // const enhancedModel = wrapLanguageModel({
-    //   model: openrouter("deepseek/deepseek-r1:free"),
-    //   middleware: extractReasoningMiddleware({ tagName: "think" }),
-    // });
+// export async function getQuizUnstructuredResponse({
+//   context,
+//   query,
+// }: {
+//   context: any[];
+//   query: string;
+// }) {
+//   try {
+//     // const enhancedModel = wrapLanguageModel({
+//     //   model: openrouter("deepseek/deepseek-r1:free"),
+//     //   middleware: extractReasoningMiddleware({ tagName: "think" }),
+//     // });
 
-    const { text } = await generateText({
-      model: anthropic("claude-3-7-sonnet-20250219"),
-      // model: enhancedModel,
-      prompt: getQuizResponsePrompt({ context, query }),
-    });
+//     const { text } = await generateText({
+//       model: anthropic("claude-3-7-sonnet-20250219"),
+//       // model: enhancedModel,
+//       prompt: getQuizResponsePrompt({ context, query }),
+//     });
 
-    return { text };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-}
+//     return { text };
+//   } catch (error) {
+//     console.log(error);
+//     throw error;
+//   }
+// }
 
 // export async function getQuizResponse({ text }: { text: string }) {
 //   try {
@@ -307,17 +302,18 @@ export async function getQuizUnstructuredResponse({
 // }
 
 export async function getQuizResponse({
+  messages,
   context,
   query,
 }: {
+  messages: Message[];
   context: any[];
   query: string;
 }) {
   try {
     const { partialObjectStream } = streamObject({
-      // model: deepseek("deepseek-chat"),
-      // model: anthropic("claude-3-7-sonnet-20250219"),
-      model: openai("gpt-4o-mini"),
+      messages,
+      model: azure("DeepSeek-V3"),
       schema: quizResponseScheme,
       prompt: getQuizResponsePrompt({ context, query }),
     });
@@ -367,8 +363,7 @@ Create a new question that:
 
 The question should help the student recognize their misunderstanding while building confidence in the correct application of the concept.
       `,
-      model: openai("gpt-4o-mini"),
-      // model: anthropic("claude-3-7-sonnet-20250219"),
+      model: azure("DeepSeek-V3"),
       schema: reinforcementSchema,
     });
 

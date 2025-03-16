@@ -75,6 +75,7 @@ interface QuizTool {
 
 interface ChatProps {
   welcome?: boolean;
+  userId?: string | null;
 }
 
 interface UserMessageProps {
@@ -106,4 +107,20 @@ type QueryType = "video" | "resource" | "quiz" | "general";
 interface quizForm {
   section: string | undefined;
   lecture: string | undefined;
+}
+
+interface createUserProps {
+  clerkId: string;
+  name: string;
+  email: string;
+  password?: string;
+  picture: string;
+}
+interface updateUserProps {
+  clerkId: string;
+  updateData: Partial<IUser>;
+}
+
+interface deleteUserProps {
+  clerkId: string;
 }
