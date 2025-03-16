@@ -22,6 +22,7 @@
     "@distube/ytdl-core": "^4.16.4",
     "@openrouter/ai-sdk-provider": "^0.4.3",
     "@pinecone-database/pinecone": "^5.0.2",
+    "@quail-ai/azure-ai-provider": "^1.0.5",
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.2",

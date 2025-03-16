@@ -12,15 +12,12 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { quizResponseScheme, reinforcementSchema } from "../validations";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { createAzure } from "@ai-sdk/azure";
+import { createAzure } from "@quail-ai/azure-ai-provider";
+import { openai } from "@ai-sdk/openai";
 
-const resourceNameMatch =
-  process.env.AZURE_ENDPOINT!.match(/https:\/\/([^.]+)/);
-const resourceName = resourceNameMatch ? resourceNameMatch[1] : "";
 const azure = createAzure({
-  apiKey: process.env.AZURE_API_KEY!,
-  resourceName,
-  apiVersion: "2024-05-01-preview", // Match your deployment's version
+  endpoint: process.env.AZURE_API_ENDPOINT,
+  apiKey: process.env.AZURE_API_KEY,
 });
 
 const embeddingModel = new OpenAI({
@@ -91,7 +88,7 @@ export async function getVideoResponse({
 }) {
   try {
     const { textStream } = streamText({
-      model: azure("DeepSeek-V3"),
+      model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
       prompt: getVideoPrompt({ query, relevantChunks }),
     });
 
@@ -149,7 +146,7 @@ export async function getResourceResponse({
 }) {
   try {
     const { textStream } = streamText({
-      model: azure("DeepSeek-V3"),
+      model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
       prompt: getResourcePrompt({ query, relevantResources }),
     });
 
@@ -164,7 +161,7 @@ export async function getQueryType({ query }: { query: string }) {
   try {
     const { object } = await generateObject({
       prompt: getQueryTypePrompt({ query }),
-      model: azure("DeepSeek-V3"),
+      model: openai("gpt-4o"),
       schema: z.object({
         queryType: z.union([
           z.literal("video"),
@@ -214,7 +211,7 @@ You have exactly three specialized functions:
 
       `,
       messages,
-      model: azure("DeepSeek-V3"),
+      model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
     });
 
     return textStream;
@@ -289,7 +286,7 @@ export async function getQuizContext({
 // export async function getQuizResponse({ text }: { text: string }) {
 //   try {
 //     const { partialObjectStream } = streamObject({
-//       model: openai("gpt-4o-mini"),
+//       model: openai("DeepSeek-V3o-mini"),
 //       schema: quizResponseScheme,
 //       prompt: `Extract the desired information from this text: \n` + text,
 //     });
@@ -313,9 +310,9 @@ export async function getQuizResponse({
   try {
     const { partialObjectStream } = streamObject({
       messages,
-      model: azure("DeepSeek-V3"),
+      model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
       schema: quizResponseScheme,
-      prompt: getQuizResponsePrompt({ context, query }),
+      system: getQuizResponsePrompt({ context, query }),
     });
 
     return { partialObjectStream };
@@ -363,7 +360,7 @@ Create a new question that:
 
 The question should help the student recognize their misunderstanding while building confidence in the correct application of the concept.
       `,
-      model: azure("DeepSeek-V3"),
+      model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
       schema: reinforcementSchema,
     });
 

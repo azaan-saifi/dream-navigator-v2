@@ -97,6 +97,7 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
 
     try {
       const data = await getQueryType({ query });
+      console.log(data);
       setLoadingMessage("");
 
       if (data.queryType === "video") {
