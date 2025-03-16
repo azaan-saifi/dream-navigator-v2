@@ -7,7 +7,7 @@ import {
   secondsToTimeFormat,
 } from "@/lib/utils";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { generateObject, streamObject, streamText } from "ai";
+import { generateObject, generateText, streamObject, streamText } from "ai";
 import OpenAI from "openai";
 import { z } from "zod";
 import { quizResponseScheme, reinforcementSchema } from "../validations";
@@ -257,48 +257,7 @@ export async function getQuizContext({
   }
 }
 
-// export async function getQuizUnstructuredResponse({
-//   context,
-//   query,
-// }: {
-//   context: any[];
-//   query: string;
-// }) {
-//   try {
-//     // const enhancedModel = wrapLanguageModel({
-//     //   model: openrouter("deepseek/deepseek-r1:free"),
-//     //   middleware: extractReasoningMiddleware({ tagName: "think" }),
-//     // });
-
-//     const { text } = await generateText({
-//       model: anthropic("claude-3-7-sonnet-20250219"),
-//       // model: enhancedModel,
-//       prompt: getQuizResponsePrompt({ context, query }),
-//     });
-
-//     return { text };
-//   } catch (error) {
-//     console.log(error);
-//     throw error;
-//   }
-// }
-
-// export async function getQuizResponse({ text }: { text: string }) {
-//   try {
-//     const { partialObjectStream } = streamObject({
-//       model: openai("DeepSeek-V3o-mini"),
-//       schema: quizResponseScheme,
-//       prompt: `Extract the desired information from this text: \n` + text,
-//     });
-
-//     return { partialObjectStream };
-//   } catch (error) {
-//     console.log(error);
-//     throw error;
-//   }
-// }
-
-export async function getQuizResponse({
+export async function getQuizUnstructuredResponse({
   messages,
   context,
   query,
@@ -308,11 +267,31 @@ export async function getQuizResponse({
   query: string;
 }) {
   try {
-    const { partialObjectStream } = streamObject({
+    // const enhancedModel = wrapLanguageModel({
+    //   model: openrouter("deepseek/deepseek-r1:free"),
+    //   middleware: extractReasoningMiddleware({ tagName: "think" }),
+    // });
+
+    const { text } = await generateText({
+      // model: enhancedModel,
       messages,
-      model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
-      schema: quizResponseScheme,
+      model: azure("DeepSeek-V3"),
       system: getQuizResponsePrompt({ context, query }),
+    });
+
+    return { text };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getQuizResponse({ text }: { text: string }) {
+  try {
+    const { partialObjectStream } = streamObject({
+      model: openai("gpt-4o-mini"),
+      schema: quizResponseScheme,
+      prompt: `Extract the desired information from this text: \n` + text,
     });
 
     return { partialObjectStream };
@@ -321,6 +300,30 @@ export async function getQuizResponse({
     throw error;
   }
 }
+
+// export async function getQuizResponse({
+//   messages,
+//   context,
+//   query,
+// }: {
+//   messages: Message[];
+//   context: any[];
+//   query: string;
+// }) {
+//   try {
+//     const { partialObjectStream } = streamObject({
+//       messages,
+//       model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
+//       schema: quizResponseScheme,
+//       system: getQuizResponsePrompt({ context, query }),
+//     });
+
+//     return { partialObjectStream };
+//   } catch (error) {
+//     console.log(error);
+//     throw error;
+//   }
+// }
 
 export async function getReinforcementQuestion({
   context,
@@ -360,7 +363,8 @@ Create a new question that:
 
 The question should help the student recognize their misunderstanding while building confidence in the correct application of the concept.
       `,
-      model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
+      // model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
+      model: azure("DeepSeek-V3"),
       schema: reinforcementSchema,
     });
 

@@ -16,6 +16,7 @@ import {
   getQueryType,
   getQuizContext,
   getQuizResponse,
+  getQuizUnstructuredResponse,
   // getQuizUnstructuredResponse,
   // getQuizUnstructuredResponse,
   getResourceResponse,
@@ -138,11 +139,12 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
         setQuizContext(context);
         console.log(context);
 
-        // // // setLoadingMessage("Reasoning before the response...");
-        // // const { text } = await getQuizUnstructuredResponse({
-        // //   context,
-        // //   query,
-        // // });
+        setLoadingMessage("Reasoning before the response...");
+        const { text } = await getQuizUnstructuredResponse({
+          messages,
+          context,
+          query,
+        });
 
         // // console.log("Reasoning", reasoning);
         // // console.log("text", text);
@@ -150,9 +152,7 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
         setLoadingMessage("Initialising quiz creation...");
 
         const { partialObjectStream } = await getQuizResponse({
-          messages,
-          context,
-          query,
+          text,
         });
 
         const quizId = v4();
