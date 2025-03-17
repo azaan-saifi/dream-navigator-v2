@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { IoSend } from "react-icons/io5";
+import { TextAreaProp } from "@/types";
 
 const TextArea = ({
   input,
