@@ -212,6 +212,11 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
     e.preventDefault();
     if (!input.trim()) return;
 
+    if (!userId) {
+      toast.error("Please login first");
+      return;
+    }
+
     if (pathname === "/") {
       localStorage.setItem("initialMessage", input);
       router.push("/chat");

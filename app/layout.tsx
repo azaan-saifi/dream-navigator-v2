@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const uthmaniScript = localFont({
   src: "./fonts/UthmaniScript.otf",
@@ -36,6 +37,7 @@ export default function RootLayout({
         }}
       >
         <body className={`${fontVariables} bg-dark-100 antialiased`}>
+          <Toaster position="top-center" richColors />
           {children}
         </body>
       </ClerkProvider>
