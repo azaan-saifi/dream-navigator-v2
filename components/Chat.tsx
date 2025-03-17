@@ -39,7 +39,7 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
   const [error, setError] = useState("");
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const [screenSize, setScreenSize] = useState("sm");
-  const [quizForm, setQuizForm] = useState<quizForm | undefined>();
+  // const [quizForm, setQuizForm] = useState<quizForm | undefined>();
   const [quizContext, setQuizContext] = useState<
     {
       day: RecordMetadataValue | undefined;

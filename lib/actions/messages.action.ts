@@ -7,22 +7,15 @@ import {
   secondsToTimeFormat,
 } from "@/lib/utils";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { generateObject, generateText, streamObject, streamText } from "ai";
+import { generateObject, streamObject, streamText } from "ai";
 import OpenAI from "openai";
-import { z } from "zod";
 import {
   querySchema,
   quizResponseScheme,
   reinforcementSchema,
 } from "../validations";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { createAzure } from "@quail-ai/azure-ai-provider";
 import { openai } from "@ai-sdk/openai";
-
-const azure = createAzure({
-  endpoint: process.env.AZURE_API_ENDPOINT,
-  apiKey: process.env.AZURE_API_KEY,
-});
 
 const embeddingModel = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
