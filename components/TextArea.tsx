@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 "use client";
 import React, { useEffect, useRef } from "react";
 import { Button } from "./ui/button";
@@ -37,15 +38,15 @@ const TextArea = ({
       id="searchBar"
       className={`absolute ${
         quiz && pathname === "/chat" && "md:w-[48%] xl:w-[58%]"
-      } pt-4 bottom-0 inset-x-2 max-lg:inset-x-2 sm:pb-12 pb-4`}
+      } inset-x-2 bottom-0 py-4 max-lg:inset-x-2 sm:pb-12`}
     >
       <form
-        className="flex max-w-3xl relative mx-auto w-full"
+        className="relative mx-auto flex w-full max-w-3xl"
         onSubmit={handleSubmit}
       >
         <textarea
           ref={textareaRef}
-          className="h-[48px] text-white w-full resize-none overflow-hidden rounded-xl border border-zinc-700 bg-dark-200 py-4 pl-6 pr-16 text-[16px] outline-none placeholder:text-zinc-400 focus-within:outline-none"
+          className="h-[48px] w-full resize-none overflow-hidden rounded-xl border border-zinc-700 bg-dark-200 py-4 pl-6 pr-16 text-[16px] text-white outline-none placeholder:text-zinc-400 focus-within:outline-none"
           placeholder="Send a message"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -74,7 +75,7 @@ const TextArea = ({
         <Button
           type="submit"
           disabled={!input.length}
-          className="text-white absolute right-2 bottom-1.5 rounded-lg bg-primary-100 size-11"
+          className="absolute bottom-1.5 right-2 size-11 rounded-lg bg-primary-100 text-white"
         >
           <IoSend />
         </Button>

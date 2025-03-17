@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 "use client";
 import React, { useEffect, useState } from "react";
 import Welcome from "./Welcome";
@@ -28,6 +29,7 @@ import { getStreamingObjectResponse, getStreamingResponse } from "@/lib/utils";
 import Quiz from "./Quiz";
 import { v4 } from "uuid";
 import { RecordMetadataValue } from "@pinecone-database/pinecone";
+import { ChatProps, Message, QuizTool } from "@/types";
 
 const MemoizedUserMessage = React.memo(UserMessage);
 const MemoizedAssistantMessage = React.memo(AssistantMessage);
@@ -162,7 +164,7 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
 
         await getStreamingObjectResponse({
           setMessages,
-          partialObjectStream: partialObjectStream,
+          partialObjectStream,
           toolId: quizId,
           toolName: "quiz",
           transformTool: (tool) => ({
@@ -273,18 +275,18 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
 
   return (
     <>
-      <div className="flex flex-col w-full max-w-3xl mx-auto sm:max-h-[480px] max-h-[540px]">
+      <div className="mx-auto flex max-h-[540px] w-full max-w-3xl flex-col sm:max-h-[480px]">
         {welcome ? (
           <Welcome />
         ) : (
-          <div className="flex flex-col items-end justify-start h-full overflow-y-auto hide-scrollbar px-2 gap-3">
+          <div className="hide-scrollbar flex h-full flex-col items-end justify-start gap-3 overflow-y-auto px-2">
             {messages.map((message, index) => (
               <div
                 key={`message-${index}`}
-                className={`flex items-start max-w-[85%] max-sm:max-w-[95%] ${
+                className={`flex max-w-[85%] items-start max-sm:max-w-[95%] ${
                   message.role === "user"
                     ? "self-end"
-                    : "self-start flex-row-reverse"
+                    : "flex-row-reverse self-start"
                 } mb-4`}
               >
                 {message.role === "user" ? (
@@ -333,7 +335,7 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
           input={input}
           setInput={setInput}
           handleSubmit={handleSubmit}
-          quiz={activeQuizTool && hasQuizData ? true : false}
+          quiz={!!(activeQuizTool && hasQuizData)}
           pathname={pathname}
         />
       </div>

@@ -1,3 +1,7 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { IUser } from "@/lib/database/models/user.model";
+
 interface CloudinaryResult {
   secure_url: string;
 }
@@ -39,11 +43,6 @@ interface PineconeMetadata {
   text: string;
 }
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  tool?: QuizTool;
-}
 interface QuizQuestion {
   question: string;
   options: string[];
@@ -71,6 +70,11 @@ interface QuizTool {
   attemptedReinforcementQuestions: boolean[];
   explanationStates: boolean[];
   correctnessStates: boolean[];
+}
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+  tool?: QuizTool;
 }
 
 interface ChatProps {
@@ -124,3 +128,5 @@ interface updateUserProps {
 interface deleteUserProps {
   clerkId: string;
 }
+
+export type PartialQuizResponse = Partial<QuizResponse>;

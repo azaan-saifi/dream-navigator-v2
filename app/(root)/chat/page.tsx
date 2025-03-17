@@ -3,7 +3,7 @@ import React from "react";
 
 const ChatPage = () => {
   return (
-    <div className="flex gap-3 w-full max-h-[100vh-200px] items-start pt-20">
+    <div className="flex max-h-[100vh-200px] w-full items-start gap-3 pt-20">
       <Chat />
     </div>
   );

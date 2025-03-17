@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-undef */
 "use server";
 import {
   getQueryTypePrompt,
@@ -8,14 +10,17 @@ import {
 } from "@/lib/utils";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { generateObject, streamObject, streamText } from "ai";
+import { openai } from "@ai-sdk/openai";
 import OpenAI from "openai";
 import {
   querySchema,
   quizResponseScheme,
   reinforcementSchema,
 } from "../validations";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { openai } from "@ai-sdk/openai";
+import {
+  createOpenRouterClient,
+  withApiKeyRetry,
+} from "../utils/api-key-manager";
 
 const embeddingModel = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -26,9 +31,8 @@ const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!,
 });
 
-const openrouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY!,
-});
+// Get OpenRouter client with rotating API keys
+const getOpenRouter = () => createOpenRouterClient();
 
 const index = pinecone.Index(process.env.PINECONE_INDEX_NAME!);
 const resourceIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME_RESOURCE!);
@@ -84,12 +88,15 @@ export async function getVideoResponse({
   relevantChunks: unknown;
 }) {
   try {
-    const { textStream } = streamText({
-      model: openai("gpt-4o-mini"),
-      prompt: getVideoPrompt({ query, relevantChunks }),
-    });
+    return await withApiKeyRetry(async () => {
+      const openrouter = getOpenRouter();
+      const { textStream } = streamText({
+        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
+        prompt: getVideoPrompt({ query, relevantChunks }),
+      });
 
-    return textStream;
+      return textStream;
+    });
   } catch (error) {
     console.log(error);
     throw error;
@@ -142,12 +149,15 @@ export async function getResourceResponse({
   relevantResources: unknown;
 }) {
   try {
-    const { textStream } = streamText({
-      model: openai("gpt-4o-mini"),
-      prompt: getResourcePrompt({ query, relevantResources }),
-    });
+    return await withApiKeyRetry(async () => {
+      const openrouter = getOpenRouter();
+      const { textStream } = streamText({
+        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
+        prompt: getResourcePrompt({ query, relevantResources }),
+      });
 
-    return textStream;
+      return textStream;
+    });
   } catch (error) {
     console.log(error);
     throw error;
@@ -158,7 +168,7 @@ export async function getQueryType({ query }: { query: string }) {
   try {
     const { object } = await generateObject({
       prompt: getQueryTypePrompt({ query }),
-      model: openai("gpt-4o"),
+      model: openai("gpt-4o-mini"),
       schema: querySchema,
     });
     return object;
@@ -174,9 +184,11 @@ export async function getGeneralResponse({
   messages: Message[];
 }) {
   try {
-    const { textStream } = streamText({
-      system: `
-You are Dream Navigator, developed by the Dream Students community to assist Arabic students studying with Ustadh Nouman Ali Khan at the Bayyinah Institute.
+    return await withApiKeyRetry(async () => {
+      const openrouter = getOpenRouter();
+      const { textStream } = streamText({
+        system: `
+        You are Dream Navigator, developed by the Dream Students community to assist Arabic students studying with Ustadh Nouman Ali Khan at the Bayyinah Institute.
 
 ## Core Functions
 You have exactly three specialized functions:
@@ -189,11 +201,12 @@ You have exactly three specialized functions:
 - Be very concise if long answer is not required.
 
       `,
-      messages,
-      model: openai("gpt-4o-mini"),
-    });
+        messages,
+        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
+      });
 
-    return textStream;
+      return textStream;
+    });
   } catch (error) {
     console.log(error);
     throw error;
@@ -268,7 +281,7 @@ export async function getQuizContext({
 // export async function getQuizResponse({ text }: { text: string }) {
 //   try {
 //     const { partialObjectStream } = streamObject({
-//       model: openai("gpt-4o-mini"),
+//       model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
 //       schema: quizResponseScheme,
 //       prompt: `Extract the desired information from this text: \n` + text,
 //     });
@@ -290,14 +303,17 @@ export async function getQuizResponse({
   query: string;
 }) {
   try {
-    const { partialObjectStream } = streamObject({
-      messages,
-      model: openai("gpt-4o-mini"),
-      schema: quizResponseScheme,
-      system: getQuizResponsePrompt({ context, query }),
-    });
+    return await withApiKeyRetry(async () => {
+      const openrouter = getOpenRouter();
+      const { partialObjectStream } = streamObject({
+        messages,
+        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
+        schema: quizResponseScheme,
+        system: getQuizResponsePrompt({ context, query }),
+      });
 
-    return { partialObjectStream };
+      return { partialObjectStream };
+    });
   } catch (error) {
     console.log(error);
     throw error;
@@ -314,17 +330,20 @@ export async function getReinforcementQuestion({
   incorrectOption: number;
 }) {
   try {
-    const { object } = await generateObject({
-      prompt: `
+    return await withApiKeyRetry(async () => {
+      const openrouter = getOpenRouter();
+
+      const { object } = await generateObject({
+        prompt: `
 You are an expert Arabic language tutor specializing in reinforcement learning. A student has answered a quiz question incorrectly, and you need to create a follow-up question to strengthen their understanding of the concept they struggled with.
 
 ORIGINAL QUESTION (That user got incorrect with the correct option number): ${JSON.stringify(
-        question
-      )}
+          question
+        )}
 STUDENT'S INCORRECT ANSWER (the option user chose): ${incorrectOption}
 RELEVANT CONTEXT (from which the original question was made): ${JSON.stringify(
-        context
-      )}
+          context
+        )}
 
 Create a new question that:
 1. Targets the same concept but approaches it from a different angle
@@ -342,11 +361,12 @@ Create a new question that:
 
 The question should help the student recognize their misunderstanding while building confidence in the correct application of the concept.
       `,
-      model: openai("gpt-4o-mini"),
-      schema: reinforcementSchema,
-    });
+        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
+        schema: reinforcementSchema,
+      });
 
-    return object;
+      return object;
+    });
   } catch (error) {
     console.log(error);
     throw error;

@@ -1,7 +1,12 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import {} from "ai";
-import { z } from "zod";
+import React from "react";
+import { Message, PartialQuizResponse, QuizQuestion } from "@/types";
+
+type AsyncIterableStream<T> = AsyncIterable<T> & ReadableStream<T>;
+// type PartialObject<T> = { [P in keyof T]?: T[P] | undefined };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -237,18 +242,7 @@ export async function getStreamingObjectResponse({
   transformTool, // Add this parameter to handle custom transformations
 }: {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  partialObjectStream: AsyncIterableStream<
-    PartialObject<{
-      quizTopic: string;
-      initialResponse: string;
-      quizData: {
-        options: string[];
-        question: string;
-        correctAnswer: number;
-        explanation: string;
-      }[];
-    }>
-  >;
+  partialObjectStream: AsyncIterableStream<PartialQuizResponse>;
   toolId: string;
   toolName: string;
   transformTool?: (tool: any) => any; // Optional function to transform the tool data

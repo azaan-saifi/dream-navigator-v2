@@ -1,5 +1,7 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { FaTimes } from "react-icons/fa";
 import { Skeleton } from "./ui/skeleton";
@@ -230,20 +232,20 @@ const Quiz = ({
     <motion.div
       initial={initial[screenSize]}
       animate={animate[screenSize]}
-      className="max-md:fixed max-md:top-20 max-md:inset-0 max-md:flex max-md:flex-col md:w-full md:mr-3 xl:w-[40%] border border-zinc-600 rounded-lg md:h-[560px] mx-auto bg-dark-200 shadow-md flex flex-col text-white"
+      className="mx-auto flex flex-col rounded-lg border border-zinc-600 bg-dark-200 text-white shadow-md max-md:fixed max-md:inset-0 max-md:top-20 max-md:flex max-md:flex-col md:mr-3 md:h-[560px] md:w-full xl:w-2/5"
     >
       {/* Fixed Quiz Header */}
-      <div className="flex flex-col gap-3 p-6 bg-dark-100 border-b rounded-t-lg border-zinc-600">
-        <div className="w-full flex items-start gap-4">
-          <h2 className="w-full text-2xl max-sm:text-xl font-bold">
+      <div className="flex flex-col gap-3 rounded-t-lg border-b border-zinc-600 bg-dark-100 p-6">
+        <div className="flex w-full items-start gap-4">
+          <h2 className="w-full text-2xl font-bold max-sm:text-xl">
             {!quizTopic && (
-              <Skeleton className="h-8 w-[60%] rounded-lg bg-dark-shimmer" />
+              <Skeleton className="h-8 w-3/5 rounded-lg bg-dark-shimmer" />
             )}
             <AutoDetectLanguage text={quizTopic} />
           </h2>
           <div
             onClick={onClose}
-            className="bg-dark-200 border border-zinc-700 rounded-full p-2 cursor-pointer"
+            className="cursor-pointer rounded-full border border-zinc-700 bg-dark-200 p-2"
           >
             <FaTimes />
           </div>
@@ -260,13 +262,13 @@ const Quiz = ({
                 </>
               ) : (
                 <>
-                  <Skeleton className="py-2.5 px-16 bg-dark-shimmer " />
-                  <Skeleton className="py-2.5 px-24 bg-dark-shimmer " />
+                  <Skeleton className="bg-dark-shimmer px-16 py-2.5 " />
+                  <Skeleton className="bg-dark-shimmer px-24 py-2.5 " />
                 </>
               )}
             </div>
             {quizData[2] ? (
-              <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
+              <div className="mt-1 h-2 w-full rounded-full bg-gray-200">
                 <div
                   className="h-2 rounded-full"
                   style={{
@@ -277,7 +279,7 @@ const Quiz = ({
               </div>
             ) : (
               <>
-                <Skeleton className="py-1 mt-1 w-full bg-dark-shimmer " />
+                <Skeleton className="mt-1 w-full bg-dark-shimmer py-1 " />
               </>
             )}
           </div>
@@ -285,14 +287,11 @@ const Quiz = ({
       </div>
 
       {/* Scrollable Quiz Content */}
-      <div
-        ref={contentRef}
-        className="p-6 overflow-auto custom-scrollbar flex-grow"
-      >
+      <div ref={contentRef} className="custom-scrollbar grow overflow-auto p-6">
         {showResults ? (
-          <div className="flex flex-col items-center justify-center h-full">
-            <div className="text-4xl mb-4">🎉</div>
-            <h3 className="text-2xl font-bold text-center mb-2">
+          <div className="flex h-full flex-col items-center justify-center">
+            <div className="mb-4 text-4xl">🎉</div>
+            <h3 className="mb-2 text-center text-2xl font-bold">
               <AutoDetectLanguage text="Quiz Completed!" />
             </h3>
             <Button
@@ -305,22 +304,22 @@ const Quiz = ({
         ) : showReinforcement ? (
           // Reinforcement question when user answers incorrectly
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2 text-amber-400">
+            <h3 className="mb-2 text-lg font-semibold text-amber-400">
               Reinforcement Question:
             </h3>
 
             {loadingReinforcement ? (
               // Skeleton loader for reinforcement question
               <div className="space-y-4">
-                <Skeleton className="w-full h-7 bg-dark-shimmer" />
+                <Skeleton className="h-7 w-full bg-dark-shimmer" />
                 {[1, 2, 3, 4].map((item) => (
                   <Skeleton
                     key={item}
-                    className="p-4 border-zinc-600 border rounded-lg bg-dark-200"
+                    className="rounded-lg border border-zinc-600 bg-dark-200 p-4"
                   >
-                    <div className="flex py-0.5 items-center gap-4">
-                      <Skeleton className="h-5 w-5 bg-dark-shimmer rounded-full" />
-                      <Skeleton className="w-full h-5 bg-dark-shimmer rounded-lg" />
+                    <div className="flex items-center gap-4 py-0.5">
+                      <Skeleton className="size-5 rounded-full bg-dark-shimmer" />
+                      <Skeleton className="h-5 w-full rounded-lg bg-dark-shimmer" />
                     </div>
                   </Skeleton>
                 ))}
@@ -328,7 +327,7 @@ const Quiz = ({
             ) : reinforcementQuestion ? (
               <>
                 <AutoDetectLanguage
-                  className="text-lg font-semibold mb-4"
+                  className="mb-4 text-lg font-semibold"
                   text={reinforcementQuestion.question}
                 />
                 <div className="space-y-3">
@@ -351,16 +350,16 @@ const Quiz = ({
                           <div className="flex items-start">
                             <div className="flex items-center justify-center">
                               <div
-                                className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
+                                className={`mr-3 flex size-5 items-center justify-center rounded-full ${
                                   showExplanation && isCorrect
                                     ? "bg-green-500"
                                     : isSelected &&
-                                      showExplanation &&
-                                      !isCorrect
-                                    ? "bg-primary-100"
-                                    : isSelected
-                                    ? "bg-dark-300"
-                                    : "bg-dark-100"
+                                        showExplanation &&
+                                        !isCorrect
+                                      ? "bg-primary-100"
+                                      : isSelected
+                                        ? "bg-dark-300"
+                                        : "bg-dark-100"
                                 }`}
                               >
                                 <span className="text-sm">
@@ -375,7 +374,7 @@ const Quiz = ({
                           </div>
 
                           {showExplanation && isCorrect && (
-                            <div className="mt-2 ml-8 text-green-400 text-sm">
+                            <div className="ml-8 mt-2 text-sm text-green-400">
                               ✓ Correct answer
                             </div>
                           )}
@@ -386,8 +385,8 @@ const Quiz = ({
                 </div>
 
                 {showExplanation && (
-                  <div className="mt-4 p-3 bg-dark-300 rounded-lg border border-zinc-700">
-                    <p className="font-semibold mb-1">Explanation:</p>
+                  <div className="mt-4 rounded-lg border border-zinc-700 bg-dark-300 p-3">
+                    <p className="mb-1 font-semibold">Explanation:</p>
                     <AutoDetectLanguage
                       text={reinforcementQuestion.explanation}
                     />
@@ -396,18 +395,18 @@ const Quiz = ({
                       {answeredCorrectly ? (
                         <Button
                           onClick={handleContinue}
-                          className="px-4 py-2 rounded-md text-white bg-primary-100 hover:bg-opacity-90"
+                          className="rounded-md bg-primary-100 px-4 py-2 text-white hover:bg-opacity-90"
                         >
                           Continue
                         </Button>
                       ) : maxAttemptsReached ? (
                         <div className="flex flex-col items-center">
-                          <p className="text-amber-400 font-bold mb-4">
+                          <p className="mb-4 font-bold text-amber-400">
                             You should revisit this topic
                           </p>
                           <Button
                             onClick={handleContinue}
-                            className="px-4 py-2 rounded-md text-white bg-primary-100 hover:bg-opacity-90"
+                            className="rounded-md bg-primary-100 px-4 py-2 text-white hover:bg-opacity-90"
                           >
                             Continue
                           </Button>
@@ -415,7 +414,7 @@ const Quiz = ({
                       ) : (
                         <Button
                           onClick={handleTryAgain}
-                          className="px-4 py-2 rounded-md bg-amber-600 hover:bg-amber-700 text-white"
+                          className="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
                         >
                           Try Again ({5 - reinforcementAttempts} attempts left)
                         </Button>
@@ -433,13 +432,13 @@ const Quiz = ({
         ) : (
           // Regular question display
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-4">
+            <h3 className="mb-4 text-lg font-semibold">
               {quizData[2] ? (
                 <AutoDetectLanguage
                   text={quizData[currentQuestion]?.question}
                 />
               ) : (
-                <Skeleton className="w-full h-7 bg-dark-shimmer" />
+                <Skeleton className="h-7 w-full bg-dark-shimmer" />
               )}
             </h3>
             {quizData[2] ? (
@@ -468,14 +467,14 @@ const Quiz = ({
                         <div className="flex items-start">
                           <div className="flex items-center justify-center">
                             <div
-                              className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
+                              className={`mr-3 flex size-5 items-center justify-center rounded-full ${
                                 showExplanation && isCorrect
                                   ? "bg-green-500"
                                   : isSelected && showExplanation && !isCorrect
-                                  ? "bg-primary-100"
-                                  : isSelected
-                                  ? "bg-dark-300"
-                                  : "bg-dark-100"
+                                    ? "bg-primary-100"
+                                    : isSelected
+                                      ? "bg-dark-300"
+                                      : "bg-dark-100"
                               }`}
                             >
                               <span className="text-sm">
@@ -484,21 +483,21 @@ const Quiz = ({
                             </div>
                           </div>
                           <AutoDetectLanguage
-                            className="text-white text-sm"
+                            className="text-sm text-white"
                             text={option}
                           />
                         </div>
                       ) : (
                         <>
-                          <div className="flex py-0.5 items-center gap-4">
-                            <Skeleton className="h-5 w-5 bg-dark-shimmer rounded-full" />
-                            <Skeleton className="w-full h-5 bg-dark-shimmer rounded-lg" />
+                          <div className="flex items-center gap-4 py-0.5">
+                            <Skeleton className="size-5 rounded-full bg-dark-shimmer" />
+                            <Skeleton className="h-5 w-full rounded-lg bg-dark-shimmer" />
                           </div>
                         </>
                       )}
 
                       {showExplanation && isCorrect && (
-                        <div className="mt-2 ml-8 text-green-400 text-sm">
+                        <div className="ml-8 mt-2 text-sm text-green-400">
                           ✓ Correct answer
                         </div>
                       )}
@@ -511,11 +510,11 @@ const Quiz = ({
                 {[1, 2, 3, 4].map((item) => (
                   <Skeleton
                     key={item}
-                    className="p-4 border-zinc-600 border rounded-lg bg-dark-200"
+                    className="rounded-lg border border-zinc-600 bg-dark-200 p-4"
                   >
-                    <div className="flex py-0.5 items-center gap-4">
-                      <Skeleton className="h-5 w-5 bg-dark-shimmer rounded-full" />
-                      <Skeleton className="w-full h-5 bg-dark-shimmer rounded-lg" />
+                    <div className="flex items-center gap-4 py-0.5">
+                      <Skeleton className="size-5 rounded-full bg-dark-shimmer" />
+                      <Skeleton className="h-5 w-full rounded-lg bg-dark-shimmer" />
                     </div>
                   </Skeleton>
                 ))}
@@ -523,8 +522,8 @@ const Quiz = ({
             )}
 
             {showExplanation && !answeredCorrectly && (
-              <div className="mt-4 p-3 bg-dark-300 rounded-lg border border-zinc-700">
-                <p className="font-semibold mb-1">Why was that incorrect?</p>
+              <div className="mt-4 rounded-lg border border-zinc-700 bg-dark-300 p-3">
+                <p className="mb-1 font-semibold">Why was that incorrect?</p>
                 <AutoDetectLanguage
                   text={quizData && quizData[currentQuestion]?.explanation}
                 />
@@ -532,7 +531,7 @@ const Quiz = ({
                   <div className="mt-4 flex justify-center">
                     <button
                       onClick={handleStartReinforcement}
-                      className="px-4 py-2 rounded-md bg-gold-transparant hover:bg-[#ff940942] hover:duration-200 text-gold-100 border border-gold-100 font-medium"
+                      className="rounded-md border border-gold-100 bg-gold-transparant px-4 py-2 font-medium text-gold-100 hover:bg-[#ff940942] hover:duration-200"
                     >
                       Try Reinforcement Question
                     </button>
@@ -544,21 +543,21 @@ const Quiz = ({
         )}
 
         {!showResults && !showReinforcement && (
-          <div className="flex justify-between mt-8">
+          <div className="mt-8 flex justify-between">
             {quizData[2] ? (
               <Button
                 onClick={() => handleNavigation("prev")}
                 disabled={currentQuestion === 0}
-                className={`px-4 py-2 rounded-md ${
+                className={`rounded-md px-4 py-2 ${
                   currentQuestion === 0
-                    ? "bg-dark-100 text-gray-400 cursor-not-allowed"
-                    : "bg-dark-100 border border-zinc-700 text-white"
+                    ? "cursor-not-allowed bg-dark-100 text-gray-400"
+                    : "border border-zinc-700 bg-dark-100 text-white"
                 }`}
               >
                 Previous
               </Button>
             ) : (
-              <Button className="px-11 py-2 bg-dark-shimmer"></Button>
+              <Button className="bg-dark-shimmer px-11 py-2"></Button>
             )}
             {quizData[2] ? (
               <Button
@@ -569,13 +568,13 @@ const Quiz = ({
                     showExplanation &&
                     !hasAttemptedReinforcement)
                 }
-                className={`px-4 py-2 rounded-md ${
+                className={`rounded-md px-4 py-2 ${
                   selectedAnswers[currentQuestion] === null ||
                   (!answeredCorrectly &&
                     showExplanation &&
                     !hasAttemptedReinforcement)
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-white bg-primary-100 hover:bg-opacity-90"
+                    ? "cursor-not-allowed text-gray-400"
+                    : "bg-primary-100 text-white hover:bg-opacity-90"
                 }`}
               >
                 {currentQuestion === quizData.length - 1
@@ -583,7 +582,7 @@ const Quiz = ({
                   : "Next Question"}
               </Button>
             ) : (
-              <Button className="px-14 py-2 bg-dark-shimmer"></Button>
+              <Button className="bg-dark-shimmer px-14 py-2"></Button>
             )}
           </div>
         )}

@@ -2,7 +2,6 @@ import Link from "next/link";
 import React, { memo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { TextEffect } from "@/components/motion-primitives/text-effect";
 
 const NonMemoizedMarkdown = ({ children }: { children: string }) => {
   const components: Partial<Components> = {
@@ -27,7 +26,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       );
     },
     ol: ({ children, ...props }) => (
-      <ol className="ml-4 list-decimal list-outside" {...props}>
+      <ol className="ml-4 list-outside list-decimal" {...props}>
         {children}
       </ol>
     ),
@@ -39,7 +38,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       );
     },
     ul: ({ children, ...props }) => (
-      <ul className="ml-4 list-disc list-outside" {...props}>
+      <ul className="ml-4 list-outside list-disc" {...props}>
         {children}
       </ul>
     ),
@@ -54,7 +53,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       return (
         // @ts-expect-error pre
         <Link
-          className="ml-1 pb-0.5 rounded-full bg-primary-100 px-2 text-white hover:bg-primary-50 hover:transition-all hover:animate-in"
+          className="ml-1 rounded-full bg-primary-100 px-2 pb-0.5 text-white hover:bg-primary-50 hover:transition-all hover:animate-in"
           target="_blank"
           rel="noreferrer"
           {...props}

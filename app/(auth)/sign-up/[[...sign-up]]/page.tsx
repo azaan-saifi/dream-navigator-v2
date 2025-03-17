@@ -44,7 +44,7 @@ export default function SignUpPage() {
                           variant="outline"
                           type="button"
                           disabled={isGlobalLoading}
-                          className="rounded-[7px] border-zinc-600 bg-dark-extraLight hover:bg-[#57494d] hover:text-white"
+                          className="rounded-[7px] border-zinc-600 bg-dark-300 hover:bg-[#57494d] hover:text-white"
                         >
                           <Clerk.Loading scope="provider:apple">
                             {(isLoading) =>
@@ -66,7 +66,7 @@ export default function SignUpPage() {
                           variant="outline"
                           type="button"
                           disabled={isGlobalLoading}
-                          className="rounded-[7px] border-zinc-600 bg-dark-extraLight hover:bg-[#57494d] hover:text-white"
+                          className="rounded-[7px] border-zinc-600 bg-dark-300 hover:bg-[#57494d] hover:text-white"
                         >
                           <Clerk.Loading scope="provider:google">
                             {(isLoading) =>

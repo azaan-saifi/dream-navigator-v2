@@ -45,7 +45,7 @@ export default function SignInPage() {
                             variant="outline"
                             type="button"
                             disabled={isGlobalLoading}
-                            className="rounded-[7px] border-zinc-600 bg-dark-extraLight hover:bg-[#57494d] hover:text-white"
+                            className="rounded-[7px] border-zinc-600 bg-dark-300 hover:bg-[#57494d] hover:text-white"
                           >
                             <Clerk.Loading scope="provider:apple">
                               {(isLoading) =>
@@ -67,7 +67,7 @@ export default function SignInPage() {
                             variant="outline"
                             type="button"
                             disabled={isGlobalLoading}
-                            className="rounded-[7px] border-zinc-600 bg-dark-extraLight hover:bg-[#57494d] hover:text-white"
+                            className="rounded-[7px] border-zinc-600 bg-dark-300 hover:bg-[#57494d] hover:text-white"
                           >
                             <Clerk.Loading scope="provider:google">
                               {(isLoading) =>
@@ -166,7 +166,7 @@ export default function SignInPage() {
                         <SignIn.Action navigate="previous" asChild>
                           <Button
                             disabled={isGlobalLoading}
-                            className="rounded-[7px] border border-zinc-700 bg-dark-medium hover:bg-dark-200"
+                            className="rounded-[7px] border border-zinc-700 bg-dark-200 hover:bg-dark-200"
                           >
                             <Clerk.Loading>
                               {(isLoading) => {

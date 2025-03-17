@@ -12,26 +12,26 @@ const index = pc.index(process.env.PINECONE_INDEX_NAME_QUIZ!);
 export async function POST() {
   try {
     const data = await readFile(`${cwd()}/01_Intensive.md`, "utf-8");
-    const intensive_1 = data.split(/Day-\d{1,2}/);
-    intensive_1.shift();
-    console.log(intensive_1.length);
+    const intensiveOne = data.split(/Day-\d{1,2}/);
+    intensiveOne.shift();
+    console.log(intensiveOne.length);
 
     const response = await openai.embeddings.create({
       model: "text-embedding-3-small",
-      input: intensive_1,
+      input: intensiveOne,
       encoding_format: "float",
     });
 
     const embeddings = response.data.map((item) => item.embedding);
 
     // Prepare vectors for upsert
-    const vectors = intensive_1.map((text, index) => ({
+    const vectors = intensiveOne.map((text, index) => ({
       id: v4(),
       values: embeddings[index],
       metadata: {
         section: "intensive-1",
         day: index + 1,
-        text: text,
+        text,
       },
     }));
 

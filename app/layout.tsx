@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import "./globals.css";
 import { Toaster } from "sonner";
+import React from "react";
 
 const uthmaniScript = localFont({
   src: "./fonts/UthmaniScript.otf",

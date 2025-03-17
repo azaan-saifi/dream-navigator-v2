@@ -71,6 +71,10 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      animation: {
+        "caret-blink": "caret-blink 1.25s ease-out infinite",
+        rippling: "rippling var(--duration) ease-out",
+      },
     },
   },
   // eslint-disable-next-line @typescript-eslint/no-require-imports

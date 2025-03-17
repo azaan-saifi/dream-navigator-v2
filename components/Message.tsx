@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 "use client";
 import { motion } from "framer-motion";
 import { TextShimmer } from "./TextShimmer";
@@ -45,7 +46,7 @@ export const AssistantMessage = ({
           <div className="mt-2 flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-600 text-white">
             <IoSparklesSharp />
           </div>
-          <div className="border p-3 rounded-lg border-zinc-700 bg-dark-200">
+          <div className="rounded-lg border border-zinc-700 bg-dark-200 p-3">
             <Markdown>{content}</Markdown>
           </div>
         </div>
@@ -55,40 +56,40 @@ export const AssistantMessage = ({
           <div className="mt-2 flex size-8 shrink-0 items-center justify-center rounded-full border border-zinc-600 text-white">
             <IoSparklesSharp />
           </div>
-          <div className="flex py-3 px-5 flex-col border-zinc-700 bg-dark-200 rounded-lg border gap-2 items-start">
+          <div className="flex flex-col items-start gap-2 rounded-lg border border-zinc-700 bg-dark-200 px-5 py-3">
             {tool.initialResponse ? (
               <Markdown>{tool.initialResponse}</Markdown>
             ) : (
-              <Skeleton className="w-full h-4 bg-dark-shimmer" />
+              <Skeleton className="h-4 w-full bg-dark-shimmer" />
             )}
             {tool.quizData && (
               <motion.div
                 onClick={onQuizSelect}
                 aria-disabled={tool.quizData[2]}
-                className="flex items-stretch bg-dark-hard rounded-lg border border-zinc-700 hover:border-zinc-500 hover:bg-dark-100 cursor-pointer w-full"
+                className="flex w-full cursor-pointer items-stretch rounded-lg border border-zinc-700 bg-dark-hard hover:border-zinc-500 hover:bg-dark-100"
               >
-                <div className="w-14 max-sm:w-12 flex items-center justify-center border-r border-r-zinc-700 p-3">
+                <div className="flex w-14 items-center justify-center border-r border-r-zinc-700 p-3 max-sm:w-12">
                   {tool.quizData[2] ? (
-                    <GiBrain className="text-white text-3xl max-sm:text-xl" />
+                    <GiBrain className="text-3xl text-white max-sm:text-xl" />
                   ) : (
-                    <Loader2 className="animate-spin text-dark-300 text-3xl" />
+                    <Loader2 className="animate-spin text-3xl text-dark-300" />
                   )}
                 </div>
-                <div className="flex-1 p-3 flex flex-col justify-between">
-                  <div className="text-white font-semibold">
+                <div className="flex flex-1 flex-col justify-between p-3">
+                  <div className="font-semibold text-white">
                     {tool.quizTopic ? (
                       <div className="max-w-full overflow-hidden">
                         <AutoDetectLanguage
-                          className="max-md:text-[16px] block max-sm:max-w-48 max-sm:truncate"
+                          className="block max-md:text-[16px] max-sm:max-w-48 max-sm:truncate"
                           text={tool.quizTopic}
                         />
                       </div>
                     ) : (
-                      <Skeleton className="h-6 bg-dark-shimmer w-full max-w-xs" />
+                      <Skeleton className="h-6 w-full max-w-xs bg-dark-shimmer" />
                     )}
                   </div>
                   {tool.quizData[2] && (
-                    <div className="text-sm text-zinc-400 mt-1">
+                    <div className="mt-1 text-sm text-zinc-400">
                       <AutoDetectLanguage text="Click to open" />
                     </div>
                   )}
@@ -118,18 +119,18 @@ export const ErrorMessage = ({
       animate={{ y: 0, opacity: 1 }}
     >
       <div className="flex w-full gap-4 rounded-lg max-sm:gap-2">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gold-transparant border border-gold-100 text-gold-100">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gold-100 bg-gold-transparant text-gold-100">
           <MdError />
         </div>
 
         <div
           onClick={() => handleRegenerate(messages)}
-          className="flex max-sm:flex-col items-center justify-start gap-4 cursor-pointer"
+          className="flex cursor-pointer items-center justify-start gap-4 max-sm:flex-col"
         >
-          <div className=" rounded-lg border border-gold-100 bg-gold-transparant p-3 text-gold-100 max-w-[85%]">
+          <div className=" max-w-[85%] rounded-lg border border-gold-100 bg-gold-transparant p-3 text-gold-100">
             {content}
           </div>
-          <FaUndoAlt className="text-gold-100 size-6" />
+          <FaUndoAlt className="size-6 text-gold-100" />
         </div>
       </div>
     </motion.div>
@@ -144,7 +145,7 @@ export const UserMessage = ({ content, picture }: UserMessageProps) => {
       animate={{ y: 0, opacity: 1 }}
     >
       <div className="flex w-full items-start  justify-end gap-4 rounded-lg max-sm:gap-2">
-        <div className=" rounded-lg bg-primary-100 p-3 text-white max-w-[85%]">
+        <div className=" max-w-[85%] rounded-lg bg-primary-100 p-3 text-white">
           {content}
         </div>
 

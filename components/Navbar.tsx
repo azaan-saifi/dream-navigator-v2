@@ -6,7 +6,7 @@ import HeroVideoDialog from "./ui/hero-video-dialog";
 
 const Navbar = () => {
   return (
-    <nav className="fixed inset-x-0 top-0 z-10 flex items-center justify-between bg-dark-medium px-4 py-6 lg:inset-x-24">
+    <nav className="fixed inset-x-0 top-0 z-10 flex items-center justify-between bg-dark-100 px-4 py-6 lg:inset-x-24">
       <Link href={"/"} className="w-1/3 text-sm text-white sm:text-xl">
         <span className="text-primary-100">Dream</span>Navigator
       </Link>
