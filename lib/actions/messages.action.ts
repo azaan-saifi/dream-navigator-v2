@@ -161,7 +161,7 @@ export async function getQueryType({ query }: { query: string }) {
   try {
     const { object } = await generateObject({
       prompt: getQueryTypePrompt({ query }),
-      model: openai("gpt-4o"),
+      model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
       schema: z.object({
         queryType: z.union([
           z.literal("video"),
