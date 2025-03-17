@@ -7,6 +7,13 @@ import ytdl from "@distube/ytdl-core";
 import ffmpeg from "fluent-ffmpeg";
 import { TRANSCRIPTION_PROMPT } from "../utils";
 import { v4 } from "uuid";
+import {
+  CloudinaryResult,
+  MergedTranscriptionProps,
+  SegmentProps,
+  TranscriptionChunks,
+  TranscriptionProps,
+} from "@/types";
 
 // Configuration
 cloudinary.config({

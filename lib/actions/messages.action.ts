@@ -21,6 +21,7 @@ import {
   createOpenRouterClient,
   withApiKeyRetry,
 } from "../utils/api-key-manager";
+import { Message, QuizQuestion } from "@/types";
 
 const embeddingModel = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

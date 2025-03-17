@@ -1,6 +1,8 @@
+/* eslint-disable no-undef */
 "use server";
 import { connectToDatabase } from "../database/mongoose";
 import User from "../database/models/user.model";
+import { createUserProps, deleteUserProps, updateUserProps } from "@/types";
 
 export async function createUser(userData: createUserProps) {
   try {
