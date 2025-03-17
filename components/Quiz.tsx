@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState, useRef } from "react";
@@ -8,6 +7,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Button } from "./ui/button";
 import { getReinforcementQuestion } from "@/lib/actions/messages.action";
 import AutoDetectLanguage from "./AutoDetectLanguage";
+import { QuizQuestion, QuizTool } from "@/types";
 
 interface Animate {
   [key: string]: any;

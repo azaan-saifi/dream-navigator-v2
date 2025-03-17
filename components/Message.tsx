@@ -11,6 +11,7 @@ import { FaUndoAlt } from "react-icons/fa";
 import { GiBrain } from "react-icons/gi";
 import { Skeleton } from "@/components/ui/skeleton";
 import AutoDetectLanguage from "./AutoDetectLanguage";
+import { AssistantMessageProps, UserMessageProps, Message } from "@/types";
 
 export const ThinkingMessage = ({ content }: { content: string }) => {
   return (
@@ -109,7 +110,7 @@ export const ErrorMessage = ({
   messages,
 }: {
   content: string;
-  handleRegenerate: (messages: Message[]) => Promise<void>;
+  handleRegenerate: (messagesToSend: Message[]) => Promise<void>;
   messages: Message[];
 }) => {
   return (
