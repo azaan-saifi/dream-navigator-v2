@@ -17,8 +17,6 @@ const rubikRegular = localFont({
   variable: "--font-rubikRegular",
 });
 
-export const fontVariables = `${rubikRegular.variable} ${uthmaniScript.variable}`;
-
 export const metadata: Metadata = {
   title: "Dream Navigator",
   description:
@@ -37,7 +35,9 @@ export default function RootLayout({
           baseTheme: dark,
         }}
       >
-        <body className={`${fontVariables} bg-dark-100 antialiased`}>
+        <body
+          className={`${rubikRegular.variable} ${uthmaniScript.variable} bg-dark-100 antialiased`}
+        >
           <Toaster position="top-center" richColors />
           {children}
         </body>
