@@ -38,3 +38,23 @@ export const reinforcementSchema = z.object({
     .describe("index of the options"), // Ensures a valid index (0 to 3)
   explanation: z.string().describe("Why the answer is correct"),
 });
+
+export const querySchema = z.object({
+  queryType: z.union([
+    z.literal("video"),
+    z.literal("resource"),
+    z.literal("quiz"),
+    z.literal("general"),
+  ]),
+  quizQueryProps: z.object({
+    section: z
+      .union([
+        z.literal("intensive-1"),
+        z.literal("intensive-2"),
+        z.literal("intensive-3"),
+        z.literal("intensive-4"),
+      ])
+      .optional(),
+    lecture: z.array(z.number().min(1).max(10)).optional(),
+  }),
+});
