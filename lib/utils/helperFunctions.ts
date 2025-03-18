@@ -98,6 +98,21 @@ export async function uploadToCloudinay(filePaths: string[]) {
   );
 }
 
+export async function getFiles() {
+  try {
+    const result = await cloudinary.api.resources({
+      type: "upload",
+      prefix: "dream-nav-audios/", // Important: include the trailing slash
+      resource_type: "video",
+      max_results: 500,
+    });
+
+    return result?.resources;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 // Step4: Transcribe all the audios paralelly at once for faster results
 export async function transcribeChunks(
   files: CloudinaryResult[]
@@ -249,8 +264,19 @@ export async function storeInPinecone(
       },
     }));
 
-    await index.upsert(vectors);
-    console.log(`Successfully stored ${vectors.length} vectors in Pinecone`);
+    // Split vectors into smaller batches (100 vectors per batch should be safe)
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < vectors.length; i += BATCH_SIZE) {
+      const batch = vectors.slice(i, i + BATCH_SIZE);
+      await index.upsert(batch);
+      console.log(
+        `Successfully stored batch ${Math.floor(i / BATCH_SIZE) + 1} of vectors in Pinecone`
+      );
+    }
+
+    console.log(
+      `Successfully stored all ${vectors.length} vectors in Pinecone`
+    );
   } catch (error) {
     console.error("Pinecone storage error:", error);
     throw new Error("Failed to store embeddings in Pinecone");

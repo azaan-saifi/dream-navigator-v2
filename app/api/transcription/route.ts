@@ -112,7 +112,6 @@ export async function POST(req: NextRequest) {
       fs.rmSync(outputDir, { recursive: true, force: true });
       console.log("All Audio files has deleted");
     }
-
     // Delete all files in the Cloudinary folder after transcription
     await deleteCloudinaryFolder("dream-nav-audios/");
     console.log("Cloudinary files deleted successfully!");
