@@ -81,7 +81,7 @@ const Navbar = () => {
                 </p>
               </div>
               <Badge variant="default" className="bg-primary-100 text-white">
-                Intensive 4
+                Intensive 1
               </Badge>
             </div>
             <div className="flex justify-between gap-3">
@@ -103,7 +103,7 @@ const Navbar = () => {
                 </p>
               </div>
               <Badge variant="default" className="bg-purple-600 text-white">
-                Intensive 4
+                Intensive 1
               </Badge>
             </div>
           </DialogContent>
