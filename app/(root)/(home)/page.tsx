@@ -4,7 +4,6 @@ import React from "react";
 
 const HomePage = async () => {
   const { userId } = await auth();
-  console.log(userId);
 
   return <Chat welcome={true} userId={userId} />;
 };

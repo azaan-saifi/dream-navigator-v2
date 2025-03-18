@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import Welcome from "./Welcome";
 import { useRouter, usePathname } from "next/navigation";
-import { toast } from "sonner";
 import {
   AssistantMessage,
   ErrorMessage,
@@ -12,6 +11,7 @@ import {
 import ChatScrollAnchor from "./ChatScrollAnchor";
 import TextArea from "./TextArea";
 import {
+  enhancePompt,
   getGeneralResponse,
   getQueryType,
   getQuizContext,
@@ -26,18 +26,26 @@ import Quiz from "./Quiz";
 import { v4 } from "uuid";
 import { RecordMetadataValue } from "@pinecone-database/pinecone";
 import { ChatProps, Message, QuizTool } from "@/types";
+import QuizForm from "./QuizForm";
+import toast from "react-hot-toast";
 
 const MemoizedUserMessage = React.memo(UserMessage);
 const MemoizedAssistantMessage = React.memo(AssistantMessage);
 
-const Chat = ({ welcome = false, userId }: ChatProps) => {
+const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState("");
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
   const [screenSize, setScreenSize] = useState("sm");
-  // const [quizForm, setQuizForm] = useState<quizForm | undefined>();
+  const [showQuizForm, setShowQuizForm] = useState(false);
+  const [quizFormData, setQuizFormData] = useState<{
+    lecture?: number[];
+    section?: string;
+    numberOfQuestions?: number;
+    query: string;
+  } | null>(null);
   const [quizContext, setQuizContext] = useState<
     {
       day: RecordMetadataValue | undefined;
@@ -45,6 +53,7 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
       lectureNotes: RecordMetadataValue | undefined;
     }[]
   >([]);
+
   const router = useRouter();
   const pathname = usePathname();
 
@@ -95,14 +104,29 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
     const query = storeMessages[storeMessages.length - 1].content;
 
     try {
-      const data = await getQueryType({ query });
-      console.log(data);
-      setLoadingMessage("");
+      // Start query type detection
+      const queryTypePromise = getQueryType({ query });
+
+      // Set a timeout to update loading message if query type detection takes too long
+      const loadingTimeout = setTimeout(() => {
+        setLoadingMessage("Processing your request...");
+      }, 1000);
+
+      const data = await queryTypePromise;
+      clearTimeout(loadingTimeout);
 
       if (data.queryType === "video") {
+        setLoadingMessage("Enhancing the prompt...");
+        const enhancedPrompt = await enhancePompt({ query });
+
         setLoadingMessage("Searching through the lectures...");
-        const relevantChunks = await getVideoTimestamps({ input: query });
+
+        const relevantChunks = await getVideoTimestamps({
+          input: enhancedPrompt,
+        });
         const videoResponse = await getVideoResponse({ query, relevantChunks });
+
+        // Loading message will be cleared inside the streaming function
         await getStreamingResponse({
           setMessages,
           response: videoResponse,
@@ -116,6 +140,7 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
           relevantResources,
         });
 
+        // Loading message will be cleared inside the streaming function
         await getStreamingResponse({
           setMessages,
           response: resourceResponse,
@@ -124,85 +149,161 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
       } else if (data.queryType === "quiz") {
         setLoadingMessage("Searching for the Knowledge...");
 
-        let context;
-
+        // Check if we have both lecture and section
         if (data.quizQueryProps?.lecture && data.quizQueryProps?.section) {
-          context = await getQuizContext({
+          // If we have both lecture and section, proceed as normal
+          const context = await getQuizContext({
+            section: data.quizQueryProps.section,
+            day: data.quizQueryProps.lecture,
+          });
+
+          if (!context) throw error;
+          setQuizContext(context);
+
+          setLoadingMessage("Initialising quiz creation...");
+
+          const { partialObjectStream } = await getQuizResponse({
+            messages,
+            context,
+            query,
+            numberOfQuestions: data.quizQueryProps?.numberOfQuestions,
+            // typeof data.quizQueryProps?.numberOfQuestions === "number"
+            //   ? data.quizQueryProps.numberOfQuestions
+            //   : undefined,
+          });
+
+          const quizId = v4();
+          setActiveQuizId(quizId);
+
+          // Loading message will be cleared inside the streaming function
+          await getStreamingObjectResponse({
+            setMessages,
+            partialObjectStream,
+            toolId: quizId,
+            toolName: "quiz",
+            setLoadingMessage,
+            transformTool: (tool) => ({
+              ...tool,
+              currentQuestion: 0,
+              selectedAnswers: Array(tool.quizData.length).fill(null),
+              showResults: false,
+              answeredCorrectly: true,
+              showExplanation: false,
+              showReinforcement: false,
+              reinforcementAnswer: null,
+              reinforcementAttempts: 0,
+              maxAttemptsReached: false,
+              reinforcementQuestion: null,
+              attemptedReinforcementQuestions: Array(tool.quizData.length).fill(
+                false
+              ),
+              explanationStates: Array(tool.quizData.length).fill(false),
+              correctnessStates: Array(tool.quizData.length).fill(true),
+            }),
+          });
+        } else {
+          // If we only have partial information, show the quiz form
+          setLoadingMessage("");
+          setShowQuizForm(true);
+          setQuizFormData({
+            lecture: data.quizQueryProps?.lecture,
             section: data.quizQueryProps?.section,
-            day: data.quizQueryProps?.lecture,
+            numberOfQuestions: data.quizQueryProps?.numberOfQuestions || 5,
+            query,
           });
         }
-
-        if (!context) throw error;
-        setQuizContext(context);
-        console.log(context);
-
-        // setLoadingMessage("Reasoning before the response...");
-        // const { text } = await getQuizUnstructuredResponse({
-        //   messages,
-        //   context,
-        //   query,
-        // });
-
-        // // console.log("Reasoning", reasoning);
-        // // console.log("text", text);
-
-        setLoadingMessage("Initialising quiz creation...");
-
-        const { partialObjectStream } = await getQuizResponse({
-          messages,
-          context,
-          query,
-        });
-
-        const quizId = v4();
-        setActiveQuizId(quizId);
-
-        await getStreamingObjectResponse({
-          setMessages,
-          partialObjectStream,
-          toolId: quizId,
-          toolName: "quiz",
-          transformTool: (tool) => ({
-            ...tool,
-            currentQuestion: 0,
-            selectedAnswers: Array(tool.quizData.length).fill(null),
-            showResults: false,
-            answeredCorrectly: true,
-            showExplanation: false,
-            showReinforcement: false,
-            reinforcementAnswer: null,
-            reinforcementAttempts: 0,
-            maxAttemptsReached: false,
-            reinforcementQuestion: null,
-            attemptedReinforcementQuestions: Array(tool.quizData.length).fill(
-              false
-            ),
-            explanationStates: Array(tool.quizData.length).fill(false),
-            correctnessStates: Array(tool.quizData.length).fill(true),
-          }),
-        });
-
-        setLoadingMessage("");
       } else {
         setLoadingMessage("Generating the response...");
-        const generalResponse = await getGeneralResponse({
+
+        // Start the API call to get the response without waiting for it
+        const responsePromise = getGeneralResponse({
           messages: storeMessages,
         });
 
+        // Keep the loading message until we actually have a response
+        const generalResponse = await responsePromise;
+
+        // Now process streaming response - loading message will be cleared inside the function
         await getStreamingResponse({
           setMessages,
           response: generalResponse,
           setLoadingMessage,
         });
-
-        setLoadingMessage("");
       }
     } catch (error) {
       console.error(error);
       setError("Something went wrong, Click to regenerate response");
     } finally {
       setLoadingMessage("");
+    }
+  };
+
+  const handleQuizFormSubmit = async (formData: {
+    lecture: string;
+    section: string;
+    numberOfQuestions: number;
+  }) => {
+    if (!quizFormData) return;
+
+    setShowQuizForm(false);
+    setLoadingMessage("Searching for the Knowledge...");
+
+    try {
+      // Convert the lecture string to a number array
+      const day = [parseInt(formData.lecture)];
+
+      const context = await getQuizContext({
+        section: formData.section,
+        day,
+      });
+
+      if (!context) throw error;
+      setQuizContext(context);
+
+      setLoadingMessage("Initialising quiz creation...");
+
+      const { partialObjectStream } = await getQuizResponse({
+        messages,
+        context,
+        query: quizFormData.query,
+        numberOfQuestions: formData.numberOfQuestions,
+      });
+
+      const quizId = v4();
+      setActiveQuizId(quizId);
+
+      // Loading message will be cleared inside the streaming function
+      await getStreamingObjectResponse({
+        setMessages,
+        partialObjectStream,
+        toolId: quizId,
+        toolName: "quiz",
+        setLoadingMessage,
+        transformTool: (tool) => ({
+          ...tool,
+          currentQuestion: 0,
+          selectedAnswers: Array(tool.quizData.length).fill(null),
+          showResults: false,
+          answeredCorrectly: true,
+          showExplanation: false,
+          showReinforcement: false,
+          reinforcementAnswer: null,
+          reinforcementAttempts: 0,
+          maxAttemptsReached: false,
+          reinforcementQuestion: null,
+          attemptedReinforcementQuestions: Array(tool.quizData.length).fill(
+            false
+          ),
+          explanationStates: Array(tool.quizData.length).fill(false),
+          correctnessStates: Array(tool.quizData.length).fill(true),
+        }),
+      });
+    } catch (error) {
+      console.error(error);
+      setError("Something went wrong, Click to regenerate response");
+    } finally {
+      setLoadingMessage("");
+      setQuizFormData(null);
     }
   };
 
@@ -219,12 +320,23 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
       localStorage.setItem("initialMessage", input);
       router.push("/chat");
     } else {
+      // Immediately update UI with user message
+      const userContent = input;
       const newMessages: Message[] = [
         ...messages,
-        { role: "user", content: input },
+        { role: "user", content: userContent },
       ];
-      setMessages(newMessages);
+
+      // Clear input field immediately for better UX
       setInput("");
+
+      // Update messages state
+      setMessages(newMessages);
+
+      // Show thinking message right away
+      setLoadingMessage("Thinking...");
+
+      // Then process the response in the background
       await fetchResponse(newMessages);
     }
   }
@@ -275,7 +387,7 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
         {welcome ? (
           <Welcome />
         ) : (
-          <div className="hide-scrollbar flex h-full flex-col items-end justify-start gap-3 overflow-y-auto px-2">
+          <div className="hide-scrollbar flex h-full flex-col items-end justify-start gap-3 overflow-y-auto p-2">
             {messages.map((message, index) => (
               <div
                 key={`message-${index}`}
@@ -287,7 +399,10 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
               >
                 {message.role === "user" ? (
                   <div className="flex flex-col">
-                    <MemoizedUserMessage content={message.content} />
+                    <MemoizedUserMessage
+                      content={message.content}
+                      picture={picture}
+                    />
                     <ChatScrollAnchor messages={messages} />
                   </div>
                 ) : (
@@ -323,6 +438,18 @@ const Chat = ({ welcome = false, userId }: ChatProps) => {
                 messages={messages}
                 content={error}
               />
+            )}
+
+            {/* Show Quiz Form when needed */}
+            {showQuizForm && quizFormData && (
+              <div className="mx-auto my-4 w-full max-w-md self-start">
+                <QuizForm
+                  initialLecture={quizFormData.lecture}
+                  initialSection={quizFormData.section}
+                  initialNumberOfQuestions={quizFormData.numberOfQuestions}
+                  onSubmit={handleQuizFormSubmit}
+                />
+              </div>
             )}
           </div>
         )}

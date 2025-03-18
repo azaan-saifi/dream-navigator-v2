@@ -255,12 +255,12 @@ export function createOpenRouterClient() {
  */
 export async function withApiKeyRetry<T>(
   apiCall: () => Promise<T>,
-  maxRetries: number = 6
+  maxRetries: number = 3
 ): Promise<T> {
   let retries = 0;
   const retriesPerKey = new Map<number, number>();
   const triedKeys = new Set<number>();
-  const MAX_RETRIES_PER_KEY = 1; // Try each key twice before moving to the next
+  const MAX_RETRIES_PER_KEY = 1;
 
   while (retries <= maxRetries) {
     try {
@@ -322,8 +322,8 @@ export async function withApiKeyRetry<T>(
         );
       }
 
-      // Wait a bit before retrying (exponential backoff)
-      const delay = Math.min(100 * Math.pow(2, retries), 2000);
+      // Wait a bit before retrying (minimal delay for faster response)
+      const delay = Math.min(20 * Math.pow(1.5, retries), 300);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
@@ -374,30 +374,3 @@ export function getApiKeyStats() {
     keyStats,
   };
 }
-
-// Log stats periodically (every hour)
-setInterval(
-  () => {
-    console.log(
-      "API Key Usage Statistics:",
-      JSON.stringify(getApiKeyStats(), null, 2)
-    );
-  },
-  60 * 60 * 1000
-); // Every hour
-
-// Function to check and reset rest periods
-function checkAndResetRestPeriods() {
-  const now = new Date();
-  keyUsage.forEach((usage, index) => {
-    if (usage.restUntil !== null && now >= usage.restUntil) {
-      console.log(
-        `API key ${index + 1} rest period ended. Now available again.`
-      );
-      usage.restUntil = null;
-    }
-  });
-}
-
-// Check rest periods every second
-setInterval(checkAndResetRestPeriods, 1000);

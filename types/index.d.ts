@@ -80,6 +80,7 @@ interface Message {
 interface ChatProps {
   welcome?: boolean;
   userId?: string | null;
+  picture?: string;
 }
 
 interface UserMessageProps {

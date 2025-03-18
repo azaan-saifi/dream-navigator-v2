@@ -15,7 +15,7 @@ export function TextShimmer({
   children,
   as: Component = "p",
   className,
-  duration = 2,
+  duration = 1.0,
   spread = 2,
 }: TextShimmerProps) {
   const MotionComponent = motion.create(

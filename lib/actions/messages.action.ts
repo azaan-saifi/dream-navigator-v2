@@ -9,7 +9,7 @@ import {
   secondsToTimeFormat,
 } from "@/lib/utils";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { generateObject, streamObject, streamText } from "ai";
+import { generateObject, generateText, streamObject, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import OpenAI from "openai";
 import {
@@ -298,10 +298,12 @@ export async function getQuizResponse({
   messages,
   context,
   query,
+  numberOfQuestions,
 }: {
   messages: Message[];
   context: any[];
   query: string;
+  numberOfQuestions: number;
 }) {
   try {
     return await withApiKeyRetry(async () => {
@@ -309,7 +311,7 @@ export async function getQuizResponse({
       const { partialObjectStream } = streamObject({
         messages,
         model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
-        schema: quizResponseScheme,
+        schema: quizResponseScheme(numberOfQuestions),
         system: getQuizResponsePrompt({ context, query }),
       });
 
@@ -368,6 +370,25 @@ The question should help the student recognize their misunderstanding while buil
 
       return object;
     });
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function enhancePompt({ query }: { query: string }) {
+  try {
+    const response = await generateText({
+      model: openai("gpt-4o-mini"),
+      prompt: `Your job is to enhance the prompt of the user by adding arabic language to it wherever he has used arabic as engligh.
+      ## Example:
+      User: Where ustadh mentioned about Mowsoof sifah
+      Assistant: Where ustadh mentioned about Mowsoof sifah موصوف صفة
+      ------
+      User: ${query}
+      `,
+    });
+    return response.text;
   } catch (error) {
     console.log(error);
     throw error;

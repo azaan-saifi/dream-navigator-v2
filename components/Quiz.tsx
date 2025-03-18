@@ -232,7 +232,7 @@ const Quiz = ({
     <motion.div
       initial={initial[screenSize]}
       animate={animate[screenSize]}
-      className="mx-auto flex flex-col rounded-lg border border-zinc-600 bg-dark-200 text-white shadow-md max-md:fixed max-md:inset-0 max-md:top-20 max-md:flex max-md:flex-col md:mr-3 md:h-[560px] md:w-full xl:w-2/5"
+      className="mx-auto mt-2 flex flex-col rounded-lg border border-zinc-600 bg-dark-200 text-white shadow-md max-md:fixed max-md:inset-0 max-md:top-20 max-md:flex max-md:flex-col md:mr-3 md:h-[560px] md:w-full xl:w-2/5"
     >
       {/* Fixed Quiz Header */}
       <div className="flex flex-col gap-3 rounded-t-lg border-b border-zinc-600 bg-dark-100 p-6">

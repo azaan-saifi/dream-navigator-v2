@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import "./globals.css";
-import { Toaster } from "sonner";
+import { Toaster } from "react-hot-toast";
 import React from "react";
 
 const uthmaniScript = localFont({
@@ -38,7 +38,7 @@ export default function RootLayout({
         <body
           className={`${rubikRegular.variable} ${uthmaniScript.variable} bg-dark-100 antialiased`}
         >
-          <Toaster position="top-center" richColors />
+          <Toaster position="top-center" reverseOrder={false} />
           {children}
         </body>
       </ClerkProvider>

@@ -19,8 +19,8 @@ const Welcome = () => {
         </div>
         <div className="flex items-center justify-center gap-5 max-lg:flex-col max-sm:w-full max-sm:gap-3">
           <p className="rounded-xl border border-zinc-700 bg-dark-200 p-4 text-left font-rubikRegular max-sm:text-xs">
-            <b>Ask specific questions </b>about Ustadh Nouman Ali Khan&apos;s
-            lectures, and the chatbot will provide you with{" "}
+            <b>Ask specific questions </b>about Ustadh Nouman Ali Khan&apos;s{" "}
+            Intensive one lectures, and the chatbot will provide you with{" "}
             <b>precise answers</b> along with <b>clickable timestamps.</b>
           </p>
           <p className="rounded-xl border border-zinc-700 bg-dark-200 p-4 text-left font-rubikRegular max-sm:text-xs">
@@ -28,6 +28,10 @@ const Welcome = () => {
             the relevant resource links to enhance your learning.
           </p>
         </div>
+        <p className="-mt-4 rounded-xl border border-zinc-700 bg-dark-200 p-4 text-left font-rubikRegular max-sm:text-xs lg:-mt-10">
+          <b>Create quizzes</b> by just asking for section name, the Day and
+          number of questions.
+        </p>
       </div>
     </div>
   );

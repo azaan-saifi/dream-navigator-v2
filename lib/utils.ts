@@ -63,7 +63,7 @@ Analyze each user query and respond as follows:
   *Example: "I am an 18 yr old girl finding hard-time wearing my hijab, could you recommend something that can help me with that?"* → "resource"
 
 - If the query relates to testing knowledge or practicing content from a specific lecture then now it's time to understand how you'll respond to Quiz queries since there are multiple possibilities:
-  --> GOAL: We need to collect 2 things from the query = {section name}, {day(s) name}.
+  --> GOAL: We need to collect 3 things from the query = {section name}, {day(s) name}, {number of questions}. If the user didn't specify the number of questions, simply give 3 questions.
 
   ## Possibility 1:
     - Query specfies both of them:
@@ -205,31 +205,72 @@ export async function getStreamingResponse({
   response,
   setLoadingMessage,
 }: any) {
+  // Add initial empty assistant message immediately
   setMessages((prev: Message[]) => [
     ...prev,
     { role: "assistant", content: "" },
   ]);
 
-  setLoadingMessage("");
   const reader = response.getReader();
   let assistantResponse = "";
+  let firstChunkReceived = false;
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      // Clear loading message after receiving the first chunk
+      if (!firstChunkReceived && value) {
+        firstChunkReceived = true;
+        setLoadingMessage("");
+      }
+
+      assistantResponse += value;
+
+      // Update the last message in-place for streaming
+      setMessages((prev: Message[]) => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = {
+          role: "assistant",
+          content: assistantResponse,
+        };
+        return newMessages;
+      });
     }
-    assistantResponse += value;
+  } catch (error) {
+    console.error("Streaming error:", error);
+    // Still display what we've received so far
+    if (assistantResponse) {
+      setMessages((prev: Message[]) => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = {
+          role: "assistant",
+          content:
+            assistantResponse ||
+            "Sorry, there was an error generating the response.",
+        };
+        return newMessages;
+      });
+    }
 
-    // Update the last message in-place for streaming
-    setMessages((prev: Message[]) => {
-      const newMessages = [...prev];
-      newMessages[newMessages.length - 1] = {
-        role: "assistant",
-        content: assistantResponse,
-      };
-      return newMessages;
-    });
+    // If no data was received at all before the error
+    if (!firstChunkReceived) {
+      setLoadingMessage("");
+    }
+  } finally {
+    // Ensure loading message is cleared in all cases
+    setLoadingMessage("");
+
+    // Close the reader in case of an error
+    try {
+      reader.releaseLock();
+    } catch {
+      // Ignore errors from releasing the lock
+    }
   }
 }
 
@@ -240,12 +281,14 @@ export async function getStreamingObjectResponse({
   toolId,
   toolName,
   transformTool, // Add this parameter to handle custom transformations
+  setLoadingMessage, // Add loading message parameter
 }: {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   partialObjectStream: AsyncIterableStream<PartialQuizResponse>;
   toolId: string;
   toolName: string;
   transformTool?: (tool: any) => any; // Optional function to transform the tool data
+  setLoadingMessage?: (message: string) => void; // Optional function to set loading message
 }) {
   // Add initial empty tool message with initialized state fields
   setMessages((prev) => [
@@ -271,43 +314,70 @@ export async function getStreamingObjectResponse({
     },
   ]);
 
-  // Process the async iterable stream
-  for await (const partialObject of partialObjectStream) {
-    setMessages((prev) => {
-      const newMessages = [...prev];
-      const lastMessage = newMessages[newMessages.length - 1];
+  let firstChunkReceived = false;
 
-      if (lastMessage.role === "assistant" && lastMessage.tool?.id === toolId) {
-        // Merge partial updates with existing tool data
-        return newMessages.map((msg) => {
-          if (msg === lastMessage) {
-            const updatedTool = {
-              id: toolId,
-              name: toolName,
-              ...msg.tool,
-              // Merge string fields
-              quizTopic: partialObject.quizTopic || msg?.tool?.quizTopic || "",
-              initialResponse:
-                partialObject.initialResponse ||
-                msg?.tool?.initialResponse ||
-                "",
-              // Merge array data incrementally
-              quizData: mergeQuizData(
-                msg.tool?.quizData || [],
-                partialObject.quizData || []
-              ),
-            };
-
-            return {
-              ...msg,
-              tool: transformTool ? transformTool(updatedTool) : updatedTool,
-            };
-          }
-          return msg;
-        });
+  try {
+    // Process the async iterable stream
+    for await (const partialObject of partialObjectStream) {
+      // Clear loading message after receiving the first chunk
+      if (!firstChunkReceived && setLoadingMessage) {
+        firstChunkReceived = true;
+        setLoadingMessage("");
       }
-      return newMessages;
-    });
+
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        const lastMessage = newMessages[newMessages.length - 1];
+
+        if (
+          lastMessage.role === "assistant" &&
+          lastMessage.tool?.id === toolId
+        ) {
+          // Merge partial updates with existing tool data
+          return newMessages.map((msg) => {
+            if (msg === lastMessage) {
+              const updatedTool = {
+                id: toolId,
+                name: toolName,
+                ...msg.tool,
+                // Merge string fields
+                quizTopic:
+                  partialObject.quizTopic || msg?.tool?.quizTopic || "",
+                initialResponse:
+                  partialObject.initialResponse ||
+                  msg?.tool?.initialResponse ||
+                  "",
+                // Merge array data incrementally
+                quizData: mergeQuizData(
+                  msg.tool?.quizData || [],
+                  partialObject.quizData || []
+                ),
+              };
+
+              return {
+                ...msg,
+                tool: transformTool ? transformTool(updatedTool) : updatedTool,
+              };
+            }
+            return msg;
+          });
+        }
+        return newMessages;
+      });
+    }
+  } catch (error) {
+    console.error("Streaming object error:", error);
+
+    // If we received any data before the error, keep it displayed
+    if (!firstChunkReceived && setLoadingMessage) {
+      // If no data was received at all, clear the loading message
+      setLoadingMessage("");
+    }
+  } finally {
+    // Ensure loading message is cleared even if an error occurs
+    if (setLoadingMessage) {
+      setLoadingMessage("");
+    }
   }
 }
 

@@ -37,9 +37,10 @@ const TextArea = ({
   return (
     <div
       id="searchBar"
-      className={`absolute ${
+      className={`fixed ${
         quiz && pathname === "/chat" && "md:w-[48%] xl:w-[58%]"
-      } inset-x-2 bottom-0 py-4 max-lg:inset-x-2 sm:pb-12`}
+      } inset-x-2 bottom-0 z-[5] py-4 max-lg:inset-x-2 sm:pb-12`}
+      style={{ transform: "translateZ(0)" }}
     >
       <form
         className="relative mx-auto flex w-full max-w-3xl"
