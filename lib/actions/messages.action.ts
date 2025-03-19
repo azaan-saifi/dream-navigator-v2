@@ -11,16 +11,14 @@ import {
 import { Pinecone } from "@pinecone-database/pinecone";
 import { generateObject, generateText, streamObject, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
 import OpenAI from "openai";
 import {
   querySchema,
   quizResponseScheme,
   reinforcementSchema,
 } from "../validations";
-import {
-  createOpenRouterClient,
-  withApiKeyRetry,
-} from "../utils/api-key-manager";
+
 import { Message, QuizQuestion } from "@/types";
 
 const embeddingModel = new OpenAI({
@@ -31,9 +29,6 @@ const embeddingModel = new OpenAI({
 const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!,
 });
-
-// Get OpenRouter client with rotating API keys
-const getOpenRouter = () => createOpenRouterClient();
 
 const index = pinecone.Index(process.env.PINECONE_INDEX_NAME!);
 const resourceIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME_RESOURCE!);
@@ -302,16 +297,13 @@ export async function getQuizResponse({
   numberOfQuestions: number | undefined;
 }) {
   try {
-    return await withApiKeyRetry(async () => {
-      const openrouter = getOpenRouter();
-      const { partialObjectStream } = streamObject({
-        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
-        schema: quizResponseScheme(numberOfQuestions),
-        prompt: getQuizResponsePrompt({ context, query }),
-      });
-
-      return { partialObjectStream };
+    const { partialObjectStream } = streamObject({
+      model: anthropic("claude-3-5-haiku-latest"),
+      schema: quizResponseScheme(numberOfQuestions),
+      prompt: getQuizResponsePrompt({ context, query }),
     });
+
+    return { partialObjectStream };
   } catch (error) {
     console.log(error);
     throw error;
@@ -328,20 +320,17 @@ export async function getReinforcementQuestion({
   incorrectOption: number;
 }) {
   try {
-    return await withApiKeyRetry(async () => {
-      const openrouter = getOpenRouter();
-
-      const { object } = await generateObject({
-        prompt: `
+    const { object } = await generateObject({
+      prompt: `
 You are an expert Arabic language tutor specializing in reinforcement learning. A student has answered a quiz question incorrectly, and you need to create a follow-up question to strengthen their understanding of the concept they struggled with.
 
 ORIGINAL QUESTION (That user got incorrect with the correct option number): ${JSON.stringify(
-          question
-        )}
+        question
+      )}
 STUDENT'S INCORRECT ANSWER (the option user chose): ${incorrectOption}
 RELEVANT CONTEXT (from which the original question was made): ${JSON.stringify(
-          context
-        )}
+        context
+      )}
 
 Create a new question that:
 1. Targets the same concept but approaches it from a different angle
@@ -359,12 +348,11 @@ Create a new question that:
 
 The question should help the student recognize their misunderstanding while building confidence in the correct application of the concept.
       `,
-        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
-        schema: reinforcementSchema,
-      });
-
-      return object;
+      model: anthropic("claude-3-5-haiku-latest"),
+      schema: reinforcementSchema,
     });
+
+    return object;
   } catch (error) {
     console.log(error);
     throw error;
