@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useEffect, useState } from "react";
 import Welcome from "./Welcome";
@@ -110,7 +111,7 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
       // Set a timeout to update loading message if query type detection takes too long
       const loadingTimeout = setTimeout(() => {
         setLoadingMessage("Processing your request...");
-      }, 1000);
+      }, 1500);
 
       const data = await queryTypePromise;
       clearTimeout(loadingTimeout);
@@ -152,57 +153,107 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
 
         // Check if we have both lecture and section
         if (data.quizQueryProps?.lecture && data.quizQueryProps?.section) {
-          // If we have both lecture and section, proceed as normal
-          const context = await getQuizContext({
-            section: data.quizQueryProps.section,
-            day: data.quizQueryProps.lecture,
-          });
+          try {
+            // Set a timeout for quiz context fetching
+            const contextPromise = getQuizContext({
+              section: data.quizQueryProps.section,
+              day: data.quizQueryProps.lecture,
+            });
 
-          console.log(context);
+            // Create a timeout promise that rejects after 30 seconds
+            const timeoutPromise = new Promise<never>((resolve, reject) => {
+              setTimeout(
+                () => reject(new Error("Quiz context fetch timed out")),
+                8000
+              );
+            });
 
-          if (!context) throw error;
-          setQuizContext(context);
+            // Race the promises - whichever resolves/rejects first wins
+            const context = await Promise.race([
+              contextPromise,
+              timeoutPromise,
+            ]);
 
-          setLoadingMessage("Initialising quiz creation...");
+            if (!context || context.length === 0) {
+              throw new Error(
+                "No quiz content found for the specified section and days"
+              );
+            }
 
-          const { partialObjectStream } = await getQuizResponse({
-            context,
-            query,
-            numberOfQuestions: data.quizQueryProps?.numberOfQuestions,
-            // typeof data.quizQueryProps?.numberOfQuestions === "number"
-            //   ? data.quizQueryProps.numberOfQuestions
-            //   : undefined,
-          });
+            setQuizContext(context);
+            setLoadingMessage("Initialising quiz creation...");
 
-          const quizId = v4();
-          setActiveQuizId(quizId);
+            // Similar timeout approach for quiz response
+            const quizResponsePromise = getQuizResponse({
+              context,
+              query,
+              numberOfQuestions: data.quizQueryProps?.numberOfQuestions,
+            });
 
-          // Loading message will be cleared inside the streaming function
-          await getStreamingObjectResponse({
-            setMessages,
-            partialObjectStream,
-            toolId: quizId,
-            toolName: "quiz",
-            setLoadingMessage,
-            transformTool: (tool) => ({
-              ...tool,
-              currentQuestion: 0,
-              selectedAnswers: Array(tool.quizData.length).fill(null),
-              showResults: false,
-              answeredCorrectly: true,
-              showExplanation: false,
-              showReinforcement: false,
-              reinforcementAnswer: null,
-              reinforcementAttempts: 0,
-              maxAttemptsReached: false,
-              reinforcementQuestion: null,
-              attemptedReinforcementQuestions: Array(tool.quizData.length).fill(
-                false
-              ),
-              explanationStates: Array(tool.quizData.length).fill(false),
-              correctnessStates: Array(tool.quizData.length).fill(true),
-            }),
-          });
+            const quizTimeoutPromise = new Promise<never>((resolve, reject) => {
+              setTimeout(
+                () => reject(new Error("Quiz generation timed out")),
+                30000
+              );
+            });
+
+            // Define the expected return type from getQuizResponse using a more generic approach
+            type QuizResponseType = {
+              partialObjectStream: AsyncIterable<any> & ReadableStream<any>;
+            };
+
+            const quizResponse = (await Promise.race([
+              quizResponsePromise,
+              quizTimeoutPromise,
+            ])) as QuizResponseType;
+
+            const { partialObjectStream } = quizResponse;
+
+            const quizId = v4();
+            setActiveQuizId(quizId);
+
+            // Loading message will be cleared inside the streaming function
+            await getStreamingObjectResponse({
+              setMessages,
+              partialObjectStream,
+              toolId: quizId,
+              toolName: "quiz",
+              setLoadingMessage,
+              timeoutMs: 35000,
+              transformTool: (tool) => ({
+                ...tool,
+                currentQuestion: 0,
+                selectedAnswers: Array(tool.quizData.length).fill(null),
+                showResults: false,
+                answeredCorrectly: true,
+                showExplanation: false,
+                showReinforcement: false,
+                reinforcementAnswer: null,
+                reinforcementAttempts: 0,
+                maxAttemptsReached: false,
+                reinforcementQuestion: null,
+                attemptedReinforcementQuestions: Array(
+                  tool.quizData.length
+                ).fill(false),
+                explanationStates: Array(tool.quizData.length).fill(false),
+                correctnessStates: Array(tool.quizData.length).fill(true),
+              }),
+            });
+          } catch (quizError) {
+            console.error("Quiz generation error:", quizError);
+            setLoadingMessage("");
+            // Add error message to chat
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: "assistant",
+                content:
+                  "I'm sorry, there was an error generating your quiz. This could be due to a timeout or server issue. Please try again or try asking for a quiz on a different topic.",
+              },
+            ]);
+            // Also set the error state
+            setError("Quiz generation failed. Please try again.");
+          }
         } else {
           // If we only have partial information, show the quiz form
           setLoadingMessage("");
@@ -280,6 +331,7 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
         toolId: quizId,
         toolName: "quiz",
         setLoadingMessage,
+        timeoutMs: 120000, // 2 minute timeout for quiz generation
         transformTool: (tool) => ({
           ...tool,
           currentQuestion: 0,

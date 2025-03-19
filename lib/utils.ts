@@ -3,7 +3,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import React from "react";
-import { Message, PartialQuizResponse, QuizQuestion } from "@/types";
+import { Message, QuizQuestion } from "@/types";
 
 type AsyncIterableStream<T> = AsyncIterable<T> & ReadableStream<T>;
 // type PartialObject<T> = { [P in keyof T]?: T[P] | undefined };
@@ -67,7 +67,7 @@ Analyze each user query and respond as follows:
   *Example: "How does negation of fi'l work in Arabic?"* → "general"
   *Example: "Can you explain the difference between لا and لم?"* → "general"
 
-- If the query relates to testing knowledge or practicing content from a specific lecture then now it's time to understand how you'll respond to Quiz queries since there are multiple possibilities:
+- If the query relates to testing knowledge or practicing content from a specific lecture from Intensive 1 ONLY, then respond with "quiz":
   --> GOAL: We need to collect 3 things from the query = {section name}, {day(s) name}, {number of questions}. If the user didn't specify the number of questions, simply give 3 questions.
 
   ## Possibility 1:
@@ -76,18 +76,18 @@ Analyze each user query and respond as follows:
   
   ## Possibility 2:
     - Query specfies one of them:
-    *Example: "Create a quiz on Dream Intensive 2"* → "quiz", "intensive-2"
+    *Example: "Create a quiz on Dream Intensive 1"* → "quiz", "intensive-1"
     *Example: "Create a quiz on day 4"* → "quiz", [4]
 
   ## Possibility 3:
     - Query specfies timeline of days:
     *Example: "Create a quiz on Dream Intensive 1 from day four to 7"* → "quiz", "intensive-1", [4, 5, 6, 7]
 
-  ## Possibility 4:
-    - Query specfies more than 1 sections then give the first one:
-    *Example: "Create a quiz on Intensive 2 and 3"* → "quiz", "intensive-2"
-
-  PS: Currently You can only create quizzes on intensive 1 since this is the only section we have now. If the user asks for any other section other than Intensive 1 simply respond with -> "general"
+  ## IMPORTANT: If the query mentions ANY section other than Intensive 1, you MUST classify it as "general" instead of "quiz"
+    *Example: "Create a quiz on Dream Intensive 2"* → "general"
+    *Example: "Create a quiz on Intensive 3 day 5"* → "general"
+    *Example: "Make a test for Intensive 4"* → "general"
+    *Example: "Quiz me on Intensive 2 content"* → "general"
 
 - For general questions unrelated to the three functions above, respond with only: "general"
 
@@ -290,13 +290,15 @@ export async function getStreamingObjectResponse({
   toolName,
   transformTool, // Add this parameter to handle custom transformations
   setLoadingMessage, // Add loading message parameter
+  timeoutMs = 90000, // Add timeout parameter with a default of 90 seconds
 }: {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  partialObjectStream: AsyncIterableStream<PartialQuizResponse>;
+  partialObjectStream: AsyncIterableStream<any>;
   toolId: string;
   toolName: string;
   transformTool?: (tool: any) => any; // Optional function to transform the tool data
   setLoadingMessage?: (message: string) => void; // Optional function to set loading message
+  timeoutMs?: number; // Optional timeout in milliseconds
 }) {
   // Add initial empty tool message with initialized state fields
   setMessages((prev) => [
@@ -323,11 +325,55 @@ export async function getStreamingObjectResponse({
   ]);
 
   let firstChunkReceived = false;
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  // Set a timeout that will run if we don't get any data
+  if (timeoutMs > 0) {
+    timeoutId = setTimeout(() => {
+      if (!firstChunkReceived) {
+        console.error("Streaming object response timed out");
+        if (setLoadingMessage) {
+          setLoadingMessage("");
+        }
+
+        // Show error message in chat
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          // Find the last message that should have our tool
+          const lastToolMsg = newMessages.findIndex(
+            (msg) => msg.role === "assistant" && msg.tool?.id === toolId
+          );
+
+          if (lastToolMsg >= 0) {
+            // Replace the tool message with an error message
+            newMessages[lastToolMsg] = {
+              role: "assistant",
+              content:
+                "I'm sorry, generating this content took too long. Please try again or try with different parameters.",
+            };
+          } else {
+            // Add a new error message if we couldn't find the tool message
+            newMessages.push({
+              role: "assistant",
+              content:
+                "I'm sorry, generating this content took too long. Please try again or try with different parameters.",
+            });
+          }
+          return newMessages;
+        });
+      }
+    }, timeoutMs);
+  }
 
   try {
     // Process the async iterable stream
     for await (const partialObject of partialObjectStream) {
-      console.log(partialObject);
+      // Clear timeout once we receive data
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
       // Clear loading message after receiving the first chunk
       if (!firstChunkReceived && setLoadingMessage) {
         firstChunkReceived = true;
@@ -377,10 +423,42 @@ export async function getStreamingObjectResponse({
   } catch (error) {
     console.error("Streaming object error:", error);
 
+    // Clear the timeout if it's still active
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+
     // If we received any data before the error, keep it displayed
     if (!firstChunkReceived && setLoadingMessage) {
       // If no data was received at all, clear the loading message
       setLoadingMessage("");
+
+      // Add an error message to the chat
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        // Find the last message that should have our tool
+        const lastToolMsg = newMessages.findIndex(
+          (msg) => msg.role === "assistant" && msg.tool?.id === toolId
+        );
+
+        if (lastToolMsg >= 0) {
+          // Replace the tool message with an error message
+          newMessages[lastToolMsg] = {
+            role: "assistant",
+            content:
+              "I'm sorry, there was an error generating the content. Please try again.",
+          };
+        } else {
+          // Add a new error message if we couldn't find the tool message
+          newMessages.push({
+            role: "assistant",
+            content:
+              "I'm sorry, there was an error generating the content. Please try again.",
+          });
+        }
+        return newMessages;
+      });
     }
   } finally {
     // Ensure loading message is cleared even if an error occurs
