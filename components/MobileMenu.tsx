@@ -21,12 +21,15 @@ import { toast } from "react-hot-toast";
 import HeroVideoDialog from "./ui/hero-video-dialog";
 
 const MobileMenu = () => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
 
     try {
+      setIsSubmitting(true);
       const response = await fetch("/api/feedback", {
         method: "POST",
         body: JSON.stringify({
@@ -47,6 +50,8 @@ const MobileMenu = () => {
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -142,8 +147,9 @@ const MobileMenu = () => {
                     <Button
                       type="submit"
                       className="w-full bg-primary-100 text-white"
+                      disabled={isSubmitting}
                     >
-                      Submit Feedback
+                      {isSubmitting ? "Submitting..." : "Submit Feedback"}
                     </Button>
                   </form>
                 </DialogContent>
