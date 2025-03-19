@@ -304,7 +304,7 @@ export async function getQuizResponse({
   messages: Message[];
   context: any[];
   query: string;
-  numberOfQuestions: number;
+  numberOfQuestions: number | undefined;
 }) {
   try {
     return await withApiKeyRetry(async () => {
