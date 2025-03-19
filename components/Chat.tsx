@@ -160,7 +160,7 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
               day: data.quizQueryProps.lecture,
             });
 
-            // Create a timeout promise that rejects after 30 seconds
+            // Create a timeout promise that rejects after 8 seconds
             const timeoutPromise = new Promise<never>((resolve, reject) => {
               setTimeout(
                 () => reject(new Error("Quiz context fetch timed out")),
@@ -180,6 +180,8 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
               );
             }
 
+            console.log(context);
+
             setQuizContext(context);
             setLoadingMessage("Initialising quiz creation...");
 
@@ -193,7 +195,7 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
             const quizTimeoutPromise = new Promise<never>((resolve, reject) => {
               setTimeout(
                 () => reject(new Error("Quiz generation timed out")),
-                30000
+                50000
               );
             });
 
@@ -219,7 +221,7 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
               toolId: quizId,
               toolName: "quiz",
               setLoadingMessage,
-              timeoutMs: 35000,
+              timeoutMs: 60000,
               transformTool: (tool) => ({
                 ...tool,
                 currentQuestion: 0,
