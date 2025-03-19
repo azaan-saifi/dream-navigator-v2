@@ -111,8 +111,8 @@ const Navbar = () => {
 
         <SignedOut>
           <Link href={"/sign-in"} className="max-sm:text-xs">
-            <Button className="rounded-full bg-white hover:bg-zinc-100">
-              <p className="max-sm:text-xs sm:px-2">Sign In</p>
+            <Button className="rounded-md bg-white px-4 py-1.5 font-rubikRegular font-normal text-black duration-100 hover:bg-zinc-200 hover:text-black max-sm:text-sm">
+              Sign In
             </Button>
           </Link>
         </SignedOut>

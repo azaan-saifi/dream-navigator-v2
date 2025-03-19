@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Menu } from "lucide-react";
 import Link from "next/link";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignedIn } from "@clerk/nextjs";
 import { Badge } from "./ui/badge";
 import { FaPlayCircle, FaQuestionCircle } from "react-icons/fa";
 import { GiScrollQuill } from "react-icons/gi";
@@ -69,13 +69,13 @@ const MobileMenu = () => {
           </Link>
 
           <div className="flex flex-col gap-4 border-t border-zinc-700 py-4">
-            <SignedOut>
+            {/* <SignedOut>
               <Link href="/sign-in">
                 <Button className="w-full rounded-full bg-white text-black hover:bg-zinc-100">
                   Sign In
                 </Button>
               </Link>
-            </SignedOut>
+            </SignedOut> */}
 
             <SignedIn>
               <Dialog>
