@@ -163,7 +163,6 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
           setLoadingMessage("Initialising quiz creation...");
 
           const { partialObjectStream } = await getQuizResponse({
-            messages,
             context,
             query,
             numberOfQuestions: data.quizQueryProps?.numberOfQuestions,
@@ -263,7 +262,6 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
       setLoadingMessage("Initialising quiz creation...");
 
       const { partialObjectStream } = await getQuizResponse({
-        messages,
         context,
         query: quizFormData.query,
         numberOfQuestions: formData.numberOfQuestions,

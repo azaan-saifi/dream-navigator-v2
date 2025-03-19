@@ -296,12 +296,10 @@ export async function getQuizContext({
 // }
 
 export async function getQuizResponse({
-  messages,
   context,
   query,
   numberOfQuestions = 3,
 }: {
-  messages: Message[];
   context: any[];
   query: string;
   numberOfQuestions: number | undefined;
@@ -310,7 +308,6 @@ export async function getQuizResponse({
     return await withApiKeyRetry(async () => {
       const openrouter = getOpenRouter();
       const { partialObjectStream } = streamObject({
-        messages,
         model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
         schema: quizResponseScheme(numberOfQuestions),
         system: getQuizResponsePrompt({ context, query }),
