@@ -298,7 +298,7 @@ export async function getQuizResponse({
 }) {
   try {
     const { partialObjectStream } = streamObject({
-      model: anthropic("claude-3-5-haiku-latest"),
+      model: anthropic("claude-3-5-sonnet-latest"),
       schema: quizResponseScheme(numberOfQuestions),
       prompt: getQuizResponsePrompt({ context, query }),
     });
