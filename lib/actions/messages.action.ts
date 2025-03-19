@@ -89,15 +89,12 @@ export async function getVideoResponse({
   relevantChunks: unknown;
 }) {
   try {
-    return await withApiKeyRetry(async () => {
-      const openrouter = getOpenRouter();
-      const { textStream } = streamText({
-        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
-        prompt: getVideoPrompt({ query, relevantChunks }),
-      });
-
-      return textStream;
+    const { textStream } = streamText({
+      model: openai("gpt-4o-mini"),
+      prompt: getVideoPrompt({ query, relevantChunks }),
     });
+
+    return textStream;
   } catch (error) {
     console.log(error);
     throw error;
@@ -150,15 +147,12 @@ export async function getResourceResponse({
   relevantResources: unknown;
 }) {
   try {
-    return await withApiKeyRetry(async () => {
-      const openrouter = getOpenRouter();
-      const { textStream } = streamText({
-        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
-        prompt: getResourcePrompt({ query, relevantResources }),
-      });
-
-      return textStream;
+    const { textStream } = streamText({
+      model: openai("gpt-4o-mini"),
+      prompt: getResourcePrompt({ query, relevantResources }),
     });
+
+    return textStream;
   } catch (error) {
     console.log(error);
     throw error;
@@ -185,10 +179,8 @@ export async function getGeneralResponse({
   messages: Message[];
 }) {
   try {
-    return await withApiKeyRetry(async () => {
-      const openrouter = getOpenRouter();
-      const { textStream } = streamText({
-        system: `
+    const { textStream } = streamText({
+      system: `
         You are Dream Navigator, developed by the Dream Students community to assist Arabic students studying with Ustadh Nouman Ali Khan at the Bayyinah Institute.
 
 ## Core Functions
@@ -203,12 +195,11 @@ You have exactly three specialized functions:
 - Be very concise if long answer is not required.
 
       `,
-        messages,
-        model: openrouter("google/gemini-2.0-pro-exp-02-05:free"),
-      });
-
-      return textStream;
+      messages,
+      model: openai("gpt-4o-mini"),
     });
+
+    return textStream;
   } catch (error) {
     console.log(error);
     throw error;

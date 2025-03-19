@@ -57,10 +57,15 @@ Analyze each user query and respond as follows:
   *Example: "Where does Ustadh Nouman discuss the Prophet's approach to gratitude?"* → "video"
 
 - If the query requests educational materials, documents, students timestamps, transcriptions, notes, learning resources, respond with only: "resource"
-- If the query requests any general recommendations or asking for suggesting anything that can help, respond with only: "resource"
+- If the query explicitly requests recommendations or materials like "Could you suggest a resource/book/video that can help with..." respond with only: "resource"
   *Example: "Give me Sangeen khan's story night whisper transcript."* → "resource"
-  *Example: "I am so weak in numbers in arabic, could you suggest anything that can help?"* → "resource"
+  *Example: "Can you recommend any resources to help me with numbers in Arabic?"* → "resource"
   *Example: "I am an 18 yr old girl finding hard-time wearing my hijab, could you recommend something that can help me with that?"* → "resource"
+
+- If the query is asking about Arabic grammar, linguistic concepts, or technical explanations (like negation, verb forms, plural patterns, etc.) without specifically requesting a resource, respond with only: "general"
+  *Example: "What are ways to negate a verb (fi'l) in Arabic?"* → "general"
+  *Example: "How does negation of fi'l work in Arabic?"* → "general"
+  *Example: "Can you explain the difference between لا and لم?"* → "general"
 
 - If the query relates to testing knowledge or practicing content from a specific lecture then now it's time to understand how you'll respond to Quiz queries since there are multiple possibilities:
   --> GOAL: We need to collect 3 things from the query = {section name}, {day(s) name}, {number of questions}. If the user didn't specify the number of questions, simply give 3 questions.
@@ -77,8 +82,6 @@ Analyze each user query and respond as follows:
   ## Possibility 3:
     - Query specfies timeline of days:
     *Example: "Create a quiz on Dream Intensive 1 from day four to 7"* → "quiz", "intensive-1", [4, 5, 6, 7]
-    - Query specifies more than 4 days then give only first 4:
-    *Example: "Create a quiz on Dream Intensive 2 from day 2 to seven"* → "quiz", "intensive-2", [2, 3, 4, 5]
 
   ## Possibility 4:
     - Query specfies more than 1 sections then give the first one:
@@ -136,13 +139,16 @@ export function getResourcePrompt({
   )}
 
   ## INSTRUCTIONS:
-  - Your job is to find the best resource that can fulfill user's request.
+  - FIRST, carefully evaluate if any of the provided resources truly match the user's query. Only proceed if there's a genuine match.
+  - If the resources provided are not directly relevant to the user's specific question or topic, DO NOT suggest them. Instead, clearly state that you don't have relevant resources on that specific topic.
+  - Before recommending any resource, verify that its content specifically addresses the user's query - don't recommend general resources for specific questions.
+  - Your job is to find the best resource that can fulfill user's request, but only if such a resource actually exists in the provided context.
   - Be as friendly, attractive and impressive as possible while answering and also BE CONCISE.
   - If the user didn't specify how many resources they want, simply give ONLY ONE RESOURCE that's most relevant to their query.
-  - If the user asks for a general recommendation for his studies, suggest a helpful resource from the context you have that matches their need and explain why it might be useful in a very consice way.
+  - If the user asks for a general recommendation for his studies, suggest a helpful resource from the context you have that matches their need and explain why it might be useful in a very concise way.
   - If the user asks for a specific resource by name, provide the relevant link from the context you have. 
   - YOU MUST Provide the resource link in this format: [resourceName](resourceLink)
-  - IMPORTANT!!: If you didn't find in the context that can satisfy the user PERFECTLY, politely say that you couldn't find anything relevant to that and also ask them to provide more info.
+  - CRITICAL: If you don't find anything in the context that can satisfy the user's query PERFECTLY, explicitly state: "I don't have specific resources on [topic]. This would be better answered as a general question." DO NOT provide marginally related resources that don't directly address the query.
 
   `;
 }
