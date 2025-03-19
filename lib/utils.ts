@@ -77,12 +77,14 @@ Analyze each user query and respond as follows:
   ## Possibility 3:
     - Query specfies timeline of days:
     *Example: "Create a quiz on Dream Intensive 1 from day four to 7"* → "quiz", "intensive-1", [4, 5, 6, 7]
-    - Query specifies more than 10 days then give only first 10:
-    *Example: "Create a quiz on Dream Intensive 2 from day 2 to thirteen"* → "quiz", "intensive-2", [2, ..., ..., 12]
+    - Query specifies more than 4 days then give only first 4:
+    *Example: "Create a quiz on Dream Intensive 2 from day 2 to seven"* → "quiz", "intensive-2", [2, 3, 4, 5]
 
   ## Possibility 4:
     - Query specfies more than 1 sections then give the first one:
     *Example: "Create a quiz on Intensive 2 and 3"* → "quiz", "intensive-2"
+
+  PS: Currently You can only create quizzes on intensive 1 since this is the only section we have now. If the user asks for any other section other than Intensive 1 simply respond with -> "general"
 
 - For general questions unrelated to the three functions above, respond with only: "general"
 

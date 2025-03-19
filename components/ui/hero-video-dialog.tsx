@@ -80,7 +80,7 @@ export default function HeroVideoDialog({
         className="group relative cursor-pointer"
         onClick={() => setIsVideoOpen(true)}
       >
-        <div className="rounded-full px-4 py-1.5 text-white hover:bg-dark-200 max-sm:text-sm max-sm:font-semibold sm:px-6 sm:py-1.5">
+        <div className="rounded-md px-4 py-1.5 font-rubikRegular font-normal text-white duration-100 hover:bg-white hover:text-black max-sm:text-sm">
           Tutorial
         </div>
       </div>

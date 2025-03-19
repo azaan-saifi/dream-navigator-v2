@@ -68,11 +68,11 @@ export const querySchema = z.object({
       .union([
         z.literal("intensive-1"),
         z.literal("intensive-2"),
-        z.literal("intensive-3"),
-        z.literal("intensive-4"),
+        // z.literal("intensive-3"),
+        // z.literal("intensive-4"),
       ])
       .optional(),
     lecture: z.array(z.number().min(1).max(10)).optional(),
-    numberOfQuestions: z.number().min(1).max(10),
+    numberOfQuestions: z.number().min(3).max(10).optional(),
   }),
 });

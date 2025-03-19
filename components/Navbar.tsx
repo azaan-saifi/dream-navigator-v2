@@ -60,10 +60,10 @@ const Navbar = () => {
       <div className="hidden w-2/3 items-center justify-end gap-1 md:flex">
         <HeroVideoDialog
           animationStyle="from-center"
-          videoSrc="https://www.youtube.com/embed/jWDtJVdbI3g?si=XevzIzxLCLbWkar5"
+          videoSrc="https://www.youtube.com/embed/YpaBf9imGlA"
         />
         <Dialog>
-          <DialogTrigger className="rounded-full px-6 py-1.5 text-white hover:bg-dark-200">
+          <DialogTrigger className="rounded-md px-4 py-1.5 font-rubikRegular font-normal text-white duration-100 hover:bg-white hover:text-black max-sm:text-sm">
             Knowledge
           </DialogTrigger>
           <DialogContent className="flex w-auto flex-col gap-5 bg-dark-100">
@@ -88,11 +88,11 @@ const Navbar = () => {
               <div className="flex items-center justify-between gap-2">
                 <GiScrollQuill className="-ml-1 text-xl text-amber-500" />
                 <p className="font-rubikRegular font-bold text-gray-500">
-                  Resource Retrieval:
+                  Resources Count:
                 </p>
               </div>
               <Badge variant="default" className="bg-amber-500 text-white">
-                Dreamers Tab
+                200+
               </Badge>
             </div>
             <div className="flex justify-between gap-3">
@@ -119,7 +119,7 @@ const Navbar = () => {
         <SignedIn>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" className="text-white">
+              <Button variant="ghost" className="font-rubikRegular text-white">
                 Feedback
               </Button>
             </DialogTrigger>

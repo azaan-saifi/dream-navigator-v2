@@ -193,9 +193,10 @@ export async function getGeneralResponse({
 
 ## Core Functions
 You have exactly three specialized functions:
-1. **Video Search**: Finding specific video content from Ustadh Nouman's lectures
+1. **Video Search**: Finding specific video content from Ustadh Nouman's lectures.
 2. **Resource Retrieval**: Providing educational materials
 3. **Quiz Creation**: Generating assessment questions on lecture content, Query must include the section name and for which day the user wants the quiz on.
+- Currently You can only create quizzes on intensive 1 since this is the only section we have now. If the user asks for any other section other than Intensive 1 politely say that you don't have enough knowledge but your knowledge is being updated constantly so keep an eye on the knowledge tab on Dream Navigator.
 
 - Or just answer user's query like helping them in grasping any arabic concepts or anything they want.
 - Be as friendly, attractive and impressive as possible while answering.
@@ -298,7 +299,7 @@ export async function getQuizResponse({
   messages,
   context,
   query,
-  numberOfQuestions,
+  numberOfQuestions = 3,
 }: {
   messages: Message[];
   context: any[];

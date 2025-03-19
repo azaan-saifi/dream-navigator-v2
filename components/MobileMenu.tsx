@@ -189,11 +189,11 @@ const MobileMenu = () => {
                   <div className="flex items-center justify-between gap-2">
                     <GiScrollQuill className="-ml-1 text-xl text-amber-500" />
                     <p className="font-rubikRegular font-bold text-gray-500">
-                      Resource Retrieval:
+                      Resources Count:
                     </p>
                   </div>
                   <Badge variant="default" className="bg-amber-500 text-white">
-                    Dreamers Tab
+                    200+
                   </Badge>
                 </div>
                 <div className="flex justify-between gap-3">
