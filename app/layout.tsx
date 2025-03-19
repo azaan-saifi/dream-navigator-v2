@@ -18,7 +18,7 @@ const rubikRegular = localFont({
 });
 
 // Set this to true when in maintenance mode
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 
 export const metadata: Metadata = {
   title: "Dream Navigator",

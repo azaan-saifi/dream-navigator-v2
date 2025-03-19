@@ -321,6 +321,7 @@ export async function getStreamingObjectResponse({
   try {
     // Process the async iterable stream
     for await (const partialObject of partialObjectStream) {
+      console.log(partialObject);
       // Clear loading message after receiving the first chunk
       if (!firstChunkReceived && setLoadingMessage) {
         firstChunkReceived = true;

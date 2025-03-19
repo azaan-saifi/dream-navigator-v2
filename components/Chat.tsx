@@ -147,6 +147,7 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
           setLoadingMessage,
         });
       } else if (data.queryType === "quiz") {
+        console.log(data);
         setLoadingMessage("Searching for the Knowledge...");
 
         // Check if we have both lecture and section
@@ -156,6 +157,8 @@ const Chat = ({ welcome = false, userId, picture }: ChatProps) => {
             section: data.quizQueryProps.section,
             day: data.quizQueryProps.lecture,
           });
+
+          console.log(context);
 
           if (!context) throw error;
           setQuizContext(context);
