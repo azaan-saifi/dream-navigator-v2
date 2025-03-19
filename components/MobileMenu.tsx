@@ -28,28 +28,40 @@ const MobileMenu = () => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
 
+    const type = formData.get("type");
+    const message = formData.get("feedback");
+
+    // Validate form data
+    if (!type || !message) {
+      toast.error("Please fill out all fields");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const response = await fetch("/api/feedback", {
         method: "POST",
         body: JSON.stringify({
-          type: formData.get("type"),
-          message: formData.get("feedback"),
+          type,
+          message,
         }),
         headers: {
           "Content-Type": "application/json",
         },
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         toast.success("Thank you for your feedback!");
         form.reset();
       } else {
-        toast.error("Failed to submit feedback");
+        console.error("Feedback submission error:", data);
+        toast.error(data.error || "Failed to submit feedback");
       }
     } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong");
+      console.error("Feedback submission exception:", error);
+      toast.error("Network error while submitting feedback");
     } finally {
       setIsSubmitting(false);
     }
@@ -158,7 +170,7 @@ const MobileMenu = () => {
 
             <HeroVideoDialog
               animationStyle="from-center"
-              videoSrc="https://www.youtube.com/embed/jWDtJVdbI3g?si=XevzIzxLCLbWkar5"
+              videoSrc="https://www.youtube.com/embed/YpaBf9imGlA"
             />
 
             <Dialog>
