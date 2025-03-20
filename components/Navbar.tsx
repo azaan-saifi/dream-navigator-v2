@@ -108,7 +108,7 @@ const Navbar = () => {
                 </p>
               </div>
               <Badge variant="default" className="bg-purple-600 text-white">
-                Intensive 1
+                Intensive 2
               </Badge>
             </div>
           </DialogContent>
