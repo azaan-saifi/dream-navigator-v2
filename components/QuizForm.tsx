@@ -45,7 +45,7 @@ const QuizForm = ({
   // Section data
   const sections = [
     { value: "intensive-1", label: "Intensive 1" },
-    // { value: "intensive-2", label: "Intensive 2" },
+    { value: "intensive-2", label: "Intensive 2" },
     // { value: "intensive-3", label: "Intensive 3" },
     // { value: "intensive-4", label: "Intensive 4" },
   ];
@@ -65,13 +65,21 @@ const QuizForm = ({
         { value: "9", label: "Day 9" },
         { value: "10", label: "Day 10" },
       ]);
+    } else if (selectedSection === "intensive-2") {
+      setAvailableLectures([
+        { value: "1", label: "Day 1" },
+        { value: "2", label: "Day 2" },
+        { value: "3", label: "Day 3" },
+        { value: "4", label: "Day 4" },
+        { value: "5", label: "Day 5" },
+        { value: "6", label: "Day 6" },
+        { value: "7", label: "Day 7" },
+        { value: "8", label: "Day 8" },
+        { value: "9", label: "Day 9" },
+        { value: "10", label: "Day 10" },
+      ]);
     }
-    // else if (selectedSection === "intensive-2") {
-    //   setAvailableLectures([
-    //     { value: "2", label: "Day 2" },
-    //     { value: "3", label: "Day 3" },
-    //   ]);
-    // } else if (selectedSection === "intensive-3") {
+    // else if (selectedSection === "intensive-3") {
     //   setAvailableLectures([
     //     { value: "3", label: "Day 3" },
     //     { value: "4", label: "Day 4" },
