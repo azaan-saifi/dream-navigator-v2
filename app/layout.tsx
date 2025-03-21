@@ -5,6 +5,7 @@ import { dark } from "@clerk/themes";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import React from "react";
+import { Analytics } from "@vercel/analytics/next";
 
 const uthmaniScript = localFont({
   src: "./fonts/UthmaniScript.otf",
@@ -86,6 +87,7 @@ export default function RootLayout({
           ) : (
             children
           )}
+          <Analytics />
         </body>
       </ClerkProvider>
     </html>
