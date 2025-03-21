@@ -67,7 +67,7 @@ Analyze each user query and respond as follows:
   *Example: "How does negation of fi'l work in Arabic?"* → "general"
   *Example: "Can you explain the difference between لا and لم?"* → "general"
 
-- If the query relates to testing knowledge or practicing content from a specific lecture from Intensive 1 ONLY, then respond with "quiz":
+- If the query relates to testing knowledge or practicing content from a specific lecture from Intensive 1 and 2 ONLY, then respond with "quiz":
   --> GOAL: We need to collect 3 things from the query = {section name}, {day(s) name}, {number of questions}. If the user didn't specify the number of questions, simply give 3 questions.
 
   ## Possibility 1:
@@ -81,7 +81,7 @@ Analyze each user query and respond as follows:
 
   ## Possibility 3:
     - Query specfies timeline of days:
-    *Example: "Create a quiz on Dream Intensive 1 from day four to 7"* → "quiz", "intensive-1", [4, 5, 6, 7]
+    *Example: "Create a quiz on Dream Intensive 2 from day four to 7"* → "quiz", "intensive-2", [4, 5, 6, 7]
 
   ## IMPORTANT: If the query mentions ANY section name other than Intensive 1 and Intensive 2, you MUST classify it as "general" instead of "quiz"
     *Example: "Create a quiz on Dream Intensive 3 day 5"* → "general"
